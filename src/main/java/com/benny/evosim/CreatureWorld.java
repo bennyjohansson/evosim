@@ -121,8 +121,8 @@ public class CreatureWorld {
                 // Remove the current element from the iterator and the list.
                 
                 //iterator.remove();
-                removeCreature(theKilledCreature);
-                System.out.println("Creature also removed");
+                //removeCreature(theKilledCreature);
+                //System.out.println("Creature also removed");
             }
         }
         /*
