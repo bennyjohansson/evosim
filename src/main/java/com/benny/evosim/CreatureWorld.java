@@ -6,6 +6,7 @@ package com.benny.evosim;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.CopyOnWriteArrayList;
         /**
          *
          * @author bennyjohansson
@@ -44,7 +45,8 @@ public class CreatureWorld {
      */
     int[] worldSize = {0, 0};
     ArrayList<ArrayList<GridContainer>> theGrid = new ArrayList<>();
-    ArrayList<DigitalCreature> creatureList = new ArrayList<>();
+    //ArrayList<DigitalCreature> creatureList = new ArrayList<>();
+    List<DigitalCreature> creatureList = new CopyOnWriteArrayList<DigitalCreature>();
 
     /*
         * Functions
@@ -109,34 +111,23 @@ public class CreatureWorld {
         
     }
     
-    public void doFightCycle() { 
-        
-        boolean killed = false;
-        Iterator<DigitalCreature>  iter= creatureList.iterator();
+    public void doFightCycle() {
+
+        Iterator<DigitalCreature> iter = creatureList.iterator();
         DigitalCreature theKilledCreature;
-        
-        for (Iterator<DigitalCreature> iterator = creatureList.iterator(); iterator.hasNext(); ) {
-            theKilledCreature = iter.next().fight();
-            if (iterator.next().equals(theKilledCreature)) {
-                // Remove the current element from the iterator and the list.
-                
-                //iterator.remove();
-                //removeCreature(theKilledCreature);
-                //System.out.println("Creature also removed");
-            }
-        }
-        /*
+   
+
         while (iter.hasNext()) {
+
             theKilledCreature = iter.next().fight();
-            //killed = iter.next().fight();
-            if(!(theKilledCreature == null)) {
+            if (!(theKilledCreature == null)) {
                 removeCreature(theKilledCreature);
-                System.out.println("Creature removed, back in doFightCycle");
             }
+
         }
-        */
-        
+
     }
+
     
     public void doRandomMoveCycle() {
         
