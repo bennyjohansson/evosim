@@ -62,6 +62,11 @@ public class DigitalCreature {
     * Action functions
     */
     
+    public String performAction(){
+    
+        return "";
+    
+    }
     
     //Eats all the food within 1 step
     public int eat() {
@@ -92,56 +97,49 @@ public class DigitalCreature {
         return totalAmount;
     }
     
-    //Tries to kill nearest neighbour
-    public DigitalCreature fight() { //DigitalCreature
-        
-        int[] tmpPosition = {0,0};
-        DigitalCreature tmpCreature=null;
-        
-        
-        System.out.println("Fighting from " + position[0] + ", " + position[1]);
+    //Tries to kill first found neighbour
+    public DigitalCreature fight() { 
+
+        int[] tmpPosition = {0, 0};
+        DigitalCreature tmpCreature = null;
+
+        //System.out.println("Fighting from " + position[0] + ", " + position[1]);
         for (int j = -1; j < 2; j++) {
-            tmpPosition[1] = position[1]+j;
+            tmpPosition[1] = position[1] + j;
             for (int i = -1; i < 2; i++) {
 
-                tmpPosition[0] = position[0]+i;
-                
+                tmpPosition[0] = position[0] + i;
+
                 //Finding opponent
                 tmpCreature = world.getCreatureFromGrid(tmpPosition);
-                
+
                 //If opponent available, fight and exit
-                if(!(tmpCreature == null)) {
-                    
+                if (!(tmpCreature == null)) {
+
                     //Attacker stronger and wins
-                    if(strength > tmpCreature.getStrength()) {
-                        
+                    if (strength > tmpCreature.getStrength()) {
+
                         System.out.println("Creature killed by: " + tmpPosition[0] + "," + tmpPosition[1]);
-                        /*
-                        world.removeCreatureFromGrid(tmpPosition);
-                        world.removeCreatureFromList(tmpCreature);*/
+
                         return tmpCreature;
-                        //return true;
                     }
-                    
+
                     //Opponent stronger and wins
-                    if(strength < tmpCreature.getStrength()) {
-                        
+                    if (strength < tmpCreature.getStrength()) {
+
                         System.out.println("Attacker got killed at: " + position[0] + "," + position[1]);
                         return this;
-                        //return true;
+
                     } else {
                         return null;
                     }
-                    
                 } else {
                     //System.out.println("No creature here");
                 }
-                //System.out.println("Eating " + positionAmount + " at " + tmpPosition[0] + ", " + tmpPosition[1]);
-               
-               
+
             }
         }
-        
+
         return null;
     }
     
