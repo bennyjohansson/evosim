@@ -8,11 +8,11 @@ class World:
     """
     def __init__(self, w_dim: tuple) -> None:
         self._w_dim = w_dim
-        self.grid = pd.DataFrame(index=range(w_dim[0]), columns=range(w_dim[1]))
+        self._grid = pd.DataFrame(index=range(w_dim[0]), columns=range(w_dim[1]))
 
     def __str__(self) -> str:
         return "I am the world of dimension: {}\n matrix: \n {} \n with area: {}".\
-            format(self._w_dim, self.grid, self.area())
+            format(self._w_dim, self._grid, self.area())
 
     def get_w_dim(self):
         return self._w_dim
@@ -24,7 +24,7 @@ class World:
         return self._w_dim[0] * self._w_dim[1]
 
     def placeFood(self, coordinate):
-        self.grid.iloc[coordinate[0], coordinate[1]] = 'F'
+        self._grid.iloc[coordinate[0], coordinate[1]] = 'F'
 
 
     def createFoodSupply(self, percentFood: float) -> None:
@@ -38,6 +38,8 @@ class World:
             self.placeFood(place)
 
 
+    def placeCreature(self, coordinate):
+        self._grid.iloc[coordinate[0], coordinate[1]] = 'C'
 
 
 
@@ -46,7 +48,7 @@ def main():
     my_world = World((10,7))
     # print(my_world)
     print("Dimension of world: {}".format(my_world.w_dim))
-    my_world.grid.iloc[1,1] = 'C'
+    my_world.placeCreature((4,5))
     print(my_world)
 
     my_world.createFoodSupply(0.40)
