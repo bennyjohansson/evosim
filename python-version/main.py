@@ -1,5 +1,5 @@
-from creatures.Creature import Creature
-from world.world import World
+from creatures.Creature import Creature, types_of_creatures
+from world.World import World
 
 def main():
     worldDimensions = (7,7)
@@ -13,8 +13,12 @@ def main():
     print(theWorld)
 
     # Create creatures with random types, strength, energy
-    mycreature = Creature(1,2,3,4,5) 
-    print(mycreature)
+    mycreatures = [Creature(types_of_creatures[0]), Creature(types_of_creatures[1]) ]
+    print(mycreatures)
+
+    theWorld.placeCreatures(mycreatures)
+
+    print(theWorld)
 
     # Place creatures randomly in world
     # theWorld.placeCreatures(myCreatures)

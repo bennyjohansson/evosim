@@ -26,9 +26,12 @@ class World:
     def placeFood(self, coordinate):
         self._grid.iloc[coordinate[0], coordinate[1]] = 'F'
 
+    def placeCreature(self, coordinate, creature):
+        self._grid.iloc[coordinate[0], coordinate[1]] = 'C:' #+ creature.cid
 
     def createFoodSupply(self, percentFood: float) -> None:
-        seed(42)
+        """ Fills the world randomly with food. 0 --> no food, 1 --> food on each part """
+        #seed(42)
         availablePositions = self.area()
         foodToBePlaced = int(availablePositions * percentFood)
         print("will randomly place {} food items".format(foodToBePlaced))
@@ -38,9 +41,11 @@ class World:
             self.placeFood(place)
 
 
-    def placeCreature(self, coordinate):
-        self._grid.iloc[coordinate[0], coordinate[1]] = 'C'
-
+    def placeCreatures(self, creatures: list):
+        numCreatures = len(creatures)
+        randomplaces = sample(list(product(range(self.w_dim[0]), range(self.w_dim[1]))), k=numCreatures)
+        for i, creature in enumerate(creatures):
+            self.placeCreature(randomplaces[i], creature)
 
 
 
@@ -48,10 +53,10 @@ def main():
     my_world = World((10,7))
     # print(my_world)
     print("Dimension of world: {}".format(my_world.w_dim))
-    my_world.placeCreature((4,5))
+    my_world.placeCreature((4,5), object())
     print(my_world)
 
-    my_world.createFoodSupply(0.40)
+    my_world.createFoodSupply(0.3)
     print(my_world)
 
 
