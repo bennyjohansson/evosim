@@ -39,29 +39,20 @@ public class DigitalCreature {
         age = 1;
         visionLength = setVision;
         outputSize = 4;
-        
+
         world = myWorld;
-        
+
         /* Initializing neural newwork, should perhaps be own class
         * Takes visionVector as input in the neural network and compress to   
         * 4 output actions (fight, eat, mate, nothing (?))
-        */
+         */
         Random rand = new Random();
         int visionVectorSize = (2 * visionLength + 1) * (2 * visionLength + 1);
-        
-        int W2size = Math.min(10,visionVectorSize);
-        
-        
-        W1 = SimpleMatrix.random_DDRM(W2size, visionVectorSize,-1,1,rand);
-        W2 = SimpleMatrix.random_DDRM(outputSize, W2size,-1,1,rand);
-        
-//        System.out.println("Vision vector:" + visionVectorSize);
-//        System.out.print("L1: ");
-//        L1.printDimensions();
-//        System.out.print("L2:");
-//        L2.printDimensions();
-//        System.out.println("Output vector:" + outputSize);
-        
+
+        int W2size = Math.min(10, visionVectorSize);
+
+        W1 = SimpleMatrix.random_DDRM(W2size, visionVectorSize, -1, 1, rand);
+        W2 = SimpleMatrix.random_DDRM(outputSize, W2size, -1, 1, rand);
     }
 
     public int getId() {
@@ -73,15 +64,33 @@ public class DigitalCreature {
         //System.out.println(id);
         return position;
     }
-    
-     public int getEnergy() {
+
+    public int getEnergy() {
         //System.out.println(id);
         return energy;
     }
-     
-     public int getStrength() {
+
+    public int getStrength() {
         //System.out.println(id);
         return strength;
+    }
+    
+    public int getVisionLength() {
+        //System.out.println(id);
+        return visionLength;
+    }
+    
+    public SimpleMatrix getWeights(int myLayer) {
+        
+        
+        if(myLayer == 1) {
+            return W1;
+        } else if(myLayer == 2) {
+            return W2;
+        } else {
+            return null;
+        }
+        
     }
 
     public void setPosition(int[] myPosition) {
@@ -89,100 +98,117 @@ public class DigitalCreature {
         position = myPosition;
 
     }
+    
+    public void setW1(SimpleMatrix Wx) {
+
+        W1 = Wx;
+
+    }
+    
+    public void setW2(SimpleMatrix Wx) {
+
+        W2 = Wx;
+
+    }
 
     /*
     * Action functions
-    */
-    
-    public String performAction(){
-        
+     */
+    public String  getAction() {
+
         double threshold = 0.5;
         int indexMax = 0;
         double maxValue = 0;
-        boolean performAction = false;
         String action = "";
-        
+
         SimpleMatrix visionVector = scanSurrounding();
-        SimpleMatrix W1output = new SimpleMatrix(W2.numCols(),1);
-        SimpleMatrix W2output = new SimpleMatrix(outputSize,1);
+        SimpleMatrix W1output = new SimpleMatrix(W2.numCols(), 1);
+        SimpleMatrix W2output = new SimpleMatrix(outputSize, 1);
         //SimpleMatrix W2outputRELU = new SimpleMatrix(outputSize,1);
-        
+
         //Layer 1
         W1output = W1.mult(visionVector);
         W1output = Functions.sigmoidFunction(W1output);
         //Need to add + b
-        
-        
+
         //Layer 2
         W2output = W2.mult(W1output);
         W2output = Functions.sigmoidFunction(W2output);
         //Need to add + b
-        
+
         W2output = Functions.sigmoidFunction(W2output);
-        
-        
+
         //W2output.print();
-        
         indexMax = Functions.findVectorIndexMax(W2output);
-        maxValue = W2output.get(indexMax,0);
-        
+        maxValue = W2output.get(indexMax, 0);
+
         //System.out.println(maxValue);
-        
-        if(maxValue >= threshold) {
-            performAction = true;
-            
-            if(indexMax == 0) {
-                action = "Fight";
-            } else if(indexMax == 1) {
-                action = "Eat";
-            } else if(indexMax == 2) {
-                action = "Reproduce";
-            } else if(indexMax == 3) {
-                action = "doNothing";
-            }  
-            else {
-                action = "doNothing";
+        if (!(maxValue >= threshold)) {
+            //Noth high enough activation
+            action = "doNothing";
+        } else {
+
+            switch (indexMax) {
+                case (0): {
+                    action = "Fight";
+                    break;
+
+                }
+                case (1): {
+                    action = "Eat";
+                    break;
+
+                }
+                case (2): {
+                    action = "Reproduce";
+                    break;
+
+                }
+                case (3): {
+                    action = "doNothing";
+                    break;
+                }
+                default:
+                //What now
             }
+
         }
-        
+
         System.out.println("Action: " + action);
-        
-    
+
         return action;
-    
+
     }
-    
+
     //Eats all the food within 1 step
     public int eat() {
         int totalAmount = 0;
         int positionAmount = 0;
-        int[] tmpPosition = {0,0};
-        
-        
-        
+        int[] tmpPosition = {0, 0};
+
         //System.out.println("Living at " + position[0] + ", " + position[1]);
         for (int j = -1; j < 2; j++) {
-            tmpPosition[1] = position[1]+j;
+            tmpPosition[1] = position[1] + j;
             for (int i = -1; i < 2; i++) {
-                
-                tmpPosition[0] = position[0]+i;
+
+                tmpPosition[0] = position[0] + i;
                 positionAmount = world.getFoodReserve(tmpPosition);
-                if(positionAmount > 0) {
+                if (positionAmount > 0) {
                     world.removeFoodReserve(tmpPosition);
                 }
                 //System.out.println("Eating " + positionAmount + " at " + tmpPosition[0] + ", " + tmpPosition[1]);
-               
-               totalAmount += positionAmount;
+
+                totalAmount += positionAmount;
             }
         }
-        
+
         energy += totalAmount;
-        
+
         return totalAmount;
     }
-    
+
     //Tries to kill first found neighbour
-    public DigitalCreature fight() { 
+    public DigitalCreature fight() {
 
         int[] tmpPosition = {0, 0};
         DigitalCreature tmpCreature = null;
@@ -227,8 +253,74 @@ public class DigitalCreature {
         return null;
     }
     
-    
-    
+    //Tries to shag first found neighbour
+    public boolean reproduce() {
+
+        int[] tmpPosition = {0, 0};
+        int[] newPosition = {0,0};
+        DigitalCreature tmpCreature = null;
+        DigitalCreature theBaby = null;
+
+        //System.out.println("Fighting from " + position[0] + ", " + position[1]);
+        for (int j = -1; j < 2; j++) {
+            tmpPosition[1] = position[1] + j;
+            for (int i = -1; i < 2; i++) {
+
+                tmpPosition[0] = position[0] + i;
+
+                //Finding opponent
+                tmpCreature = world.getCreatureFromGrid(tmpPosition);
+
+                //If partner available, reproduce and exit
+                if (!(tmpCreature == null)) {
+                    
+                   
+                    //Setting values from active part
+                    int setId = 0;
+                    String setType = getType();
+                    int setEnergy = 10;
+                    int setVision = getVisionLength();
+                    
+                    //Setting average values from mum and dad
+                    int setStrength = Math.round((getStrength() + tmpCreature.getStrength())/2);
+                    SimpleMatrix W11 = getWeights(1).plus(tmpCreature.getWeights(1)).scale(1/2);
+                    SimpleMatrix W22 = getWeights(2).plus(tmpCreature.getWeights(2)).scale(1/2);;
+                    
+                    
+                    //Creating the baby
+                    theBaby = new DigitalCreature(setId, setType, setEnergy, setStrength, setVision, world);
+                    
+                    //Setting W1 and W2
+                    theBaby.setW1(W11);
+                    theBaby.setW2(W22);
+                    
+                    //Adding creature, looping over nearby cells
+                    for (int b = -1; b < 2; b++) {
+                        newPosition[1] = position[1] + b;
+                        for (int a = -1; a < 2; a++) {
+
+                        newPosition[0] = position[0] + a;
+                            
+                            if(world.addCreature(theBaby, newPosition)) {
+                                System.out.println("YES - WE MADE A BABY");
+                                
+                                return true;
+                                
+                            }
+                        }
+                    }
+                    
+                } else {
+                    return false;
+                    //System.out.println("No creature here");
+                }
+
+            }
+        }
+
+        return false;
+    }
+
     public boolean move(String myDirection) {
 
         int[] worldSize = world.getSize();
@@ -305,9 +397,10 @@ public class DigitalCreature {
         }
 
     }
+
     /*
     * Looks "vision" steps in either direction and returns a column vector with the contents of the cells
-    */
+     */
     public SimpleMatrix scanSurrounding() {
         /*
         *returns an array {int distCreature, str dirCreature, int distFoor, str distFood}
@@ -318,11 +411,9 @@ public class DigitalCreature {
         /*
         *Scanning area of "vision" around the creature for other creatures and food. 
          */
-        
         SimpleMatrix surrounding = new SimpleMatrix((2 * visionLength + 1) * (2 * visionLength + 1), 1);
         int matrixCounter = 0;
 
-   
         int[] scanPosition = {0, 0};
 
         //Checking world boundaries
@@ -333,7 +424,7 @@ public class DigitalCreature {
         int stopY = position[1] + visionLength; //Math.min(position[1] + vision, world.getSize()[1] - 1);
 
         /*Scanning surrounding for food and creatures */
-        System.out.println("Creature at position " + position[0] + "," + position[1]);
+        //System.out.println("Creature at position " + position[0] + "," + position[1]);
         for (int j = startY; j <= stopY; j++) {
             for (int i = startX; i <= stopX; i++) {
 
