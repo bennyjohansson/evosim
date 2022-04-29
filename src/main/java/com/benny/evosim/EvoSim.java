@@ -5,11 +5,7 @@
 package com.benny.evosim;
 
 import java.util.*;
-//import java.util.concurrent.ThreadLocalRandom;
-import org.ejml.simple.SimpleMatrix;
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.dense.row.RandomMatrices_DDRM;
-
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  *
@@ -25,29 +21,17 @@ public class EvoSim {
 
     public void start() {
         
-//        Random rand = new Random();
-//        SimpleMatrix A = new SimpleMatrix(3,3);
-//        DMatrixRMaj​ D  = new DMatrixRMaj(3,3) ; 
-//        
-//        DMatrixRMaj d2 = new RandomMatrices_DDRM().createSymmetric(20,-2,3,rand);
-//        SimpleMatrix S2 = new SimpleMatrix(20,20).random64(20,20,-2,3,rand);
-//        
-//        A.print();
-//       
-
-
         /*
         *Setting initiatl parameters
         */
-        int[] worldSize = {20, 20};
-        int numberOfCreatures = 100;
+        int[] worldSize = {10, 10};
+        int numberOfCreatures = 10;
         int numberOfFoodSpots = 30;
         int foodAmount = 3;
         int creatureVision = 2;
         
         /* Create new World */
         CreatureWorld theWorld = new CreatureWorld(worldSize);
-        System.out.println("New world created with size " + worldSize[0] + "x" + worldSize[1]);
 
         /* Adding creatures to the world */
         theWorld.addRandomCreatures(numberOfCreatures);
@@ -61,6 +45,24 @@ public class EvoSim {
         /* Checking surrounding - just for test */
         tmpCreature.scanSurrounding(creatureVision);
         
+        ArrayList<String> tmpList = new ArrayList<>();
+        
+        tmpList.add("a");
+        tmpList.add("b");
+        tmpList.add("c");
+        tmpList.add("d");
+        tmpList.add("e");
+        
+        //Iterator<String> theIterator = tmpList.iterator();
+        String myString = "";
+        
+        
+        tmpList.remove("c");
+        
+        for (Iterator<String> theIterator = tmpList.iterator();theIterator.hasNext(); ) {
+            myString= theIterator.next();
+            System.out.println(myString);
+        }
         
         /* Initiating eat-and-move process */
         theWorld.printWorld();
@@ -71,6 +73,10 @@ public class EvoSim {
             theWorld.doRandomMoveCycle();
             theWorld.doFightCycle();
             
+            //tmpCreature.move("random");
+            //tmpCreature.eat();
+            //System.out.println("Creature energy " + tmpCreature.getEnergy());
+            //theWorld.printWorld();
         }
         
         System.out.println();
@@ -79,8 +85,6 @@ public class EvoSim {
         System.out.println();
         
         theWorld.printWorld();
-        
-      
 
     }
 }
