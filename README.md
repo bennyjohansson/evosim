@@ -7,3 +7,6 @@ A simulator that simulates a small grid world with creatures in them.
 - Maven
 
 
+## Python version
+- Anaconda - Python 3.9.7
+- Uses pandas
