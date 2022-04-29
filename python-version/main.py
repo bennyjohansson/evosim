@@ -2,7 +2,7 @@ from creatures.Creature import Creature, types_of_creatures
 from world.World import World
 
 def main():
-    worldDimensions = (7,7)
+    worldDimensions = (17,17)
     #numberOfCreatures = 10
 
     theWorld = World(worldDimensions)
@@ -20,11 +20,9 @@ def main():
 
     print(theWorld)
 
-    # Place creatures randomly in world
-    # theWorld.placeCreatures(myCreatures)
-
     # Iterate the world
     # While world.condition iterate
+    theWorld.iterateWorld()
     # Creatures make a choice in each iteration by AI algo
     # Creature.analyse_and_make_move --> move, eat, fight
     # World end condition

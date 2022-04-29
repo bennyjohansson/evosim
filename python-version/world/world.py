@@ -1,6 +1,16 @@
+
 import pandas as pd
+import numpy as np
 from random import sample, seed
 from itertools import product
+import sys
+sys.path.append("/Users/erikedin/Utveckling/Bennyprojekt/evosim")
+from creatures.Creature import Creature
+
+def initialise_frame(w_dim: tuple):
+    df = pd.DataFrame(index=range(w_dim[0]), columns=range(w_dim[1]))
+    df = df.fillna(0)
+    return df
 
 class World:
     """
@@ -8,11 +18,12 @@ class World:
     """
     def __init__(self, w_dim: tuple) -> None:
         self._w_dim = w_dim
-        self._grid = pd.DataFrame(index=range(w_dim[0]), columns=range(w_dim[1]))
+        self._grid = initialise_frame(w_dim) #pd.DataFrame(index=range(w_dim[0]), columns=range(w_dim[1]))
+        self._creatures_list = [Creature]
 
     def __str__(self) -> str:
-        return "I am the world of dimension: {}\n matrix: \n {} \n with area: {}".\
-            format(self._w_dim, self._grid, self.area())
+        return "I am the world of dimension: {}\n matrix: \n {} \n with area: {} \n creatures list {}".\
+            format(self._w_dim, self._grid, self.area(), self._creatures_list)
 
     def get_w_dim(self):
         return self._w_dim
@@ -27,7 +38,7 @@ class World:
         self._grid.iloc[coordinate[0], coordinate[1]] = 'F'
 
     def placeCreature(self, coordinate, creature):
-        self._grid.iloc[coordinate[0], coordinate[1]] = 'C:' #+ creature.cid
+        self._grid.iloc[coordinate[0], coordinate[1]] = creature
 
     def createFoodSupply(self, percentFood: float) -> None:
         """ Fills the world randomly with food. 0 --> no food, 1 --> food on each part """
@@ -46,10 +57,17 @@ class World:
         randomplaces = sample(list(product(range(self.w_dim[0]), range(self.w_dim[1]))), k=numCreatures)
         for i, creature in enumerate(creatures):
             self.placeCreature(randomplaces[i], creature)
+            creature.position = randomplaces[i]
+            self._creatures_list.append(creature)
+
+    def iterateWorld(self):
+        for c in self._creatures_list:
+            print(c.make_move(pd.array(np.arange(5))))
 
 
 
 def main():
+    
     my_world = World((10,7))
     # print(my_world)
     print("Dimension of world: {}".format(my_world.w_dim))
