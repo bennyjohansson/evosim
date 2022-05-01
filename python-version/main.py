@@ -1,5 +1,5 @@
-from creatures.Creature import Creature, types_of_creatures
-from world.World import World
+from creatureworld.Creature import Creature, types_of_creatures
+from creatureworld.World import World
 
 def main():
     worldDimensions = (17,17)

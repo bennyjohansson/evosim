@@ -16,6 +16,7 @@ class Creature:
     
     def __init__(self, c_type: map, ) -> None:
         """ Defines a creature takes id, type, world, strength, energy"""
+        print("Init creature")
         self._c_id = time.time_ns() 
         self._c_type  = c_type
         self._position = ()
@@ -45,9 +46,9 @@ class Creature:
     def vision(self):
         return self._c_type['vision']
 
-    def make_move(self,surroundings: pd.array):
+    def make_move(self, surroundings: pd.array):
         # Call brain with surroundings and make move
-        return (0,1)
+        return surroundings
 
 def main():
     # Test classes

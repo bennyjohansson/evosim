@@ -3,9 +3,7 @@ import pandas as pd
 import numpy as np
 from random import sample, seed
 from itertools import product
-import sys
-sys.path.append("/Users/erikedin/Utveckling/Bennyprojekt/evosim")
-from creatures.Creature import Creature
+from creatureworld.Creature import Creature, types_of_creatures
 
 def initialise_frame(w_dim: tuple):
     df = pd.DataFrame(index=range(w_dim[0]), columns=range(w_dim[1]))
@@ -19,7 +17,7 @@ class World:
     def __init__(self, w_dim: tuple) -> None:
         self._w_dim = w_dim
         self._grid = initialise_frame(w_dim) #pd.DataFrame(index=range(w_dim[0]), columns=range(w_dim[1]))
-        self._creatures_list = [Creature]
+        self._creatures_list = []
 
     def __str__(self) -> str:
         return "I am the world of dimension: {}\n matrix: \n {} \n with area: {} \n creatures list {}".\
@@ -52,18 +50,21 @@ class World:
             self.placeFood(place)
 
 
-    def placeCreatures(self, creatures: list):
+    def placeCreatures(self, creatures: list[Creature]):
         numCreatures = len(creatures)
         randomplaces = sample(list(product(range(self.w_dim[0]), range(self.w_dim[1]))), k=numCreatures)
-        for i, creature in enumerate(creatures):
-            self.placeCreature(randomplaces[i], creature)
-            creature.position = randomplaces[i]
-            self._creatures_list.append(creature)
+        for i, cr in enumerate(creatures):
+            self.placeCreature(randomplaces[i], cr)
+            cr.position = randomplaces[i]
+            self._creatures_list.append(cr)
 
     def iterateWorld(self):
-        for c in self._creatures_list:
-            print(c.make_move(pd.array(np.arange(5))))
-
+        for n in range(len(self._creatures_list)):
+            print("Creature make move: ", self._creatures_list[n])
+            #isinstance( self._creatures_list[n], Creature)
+            #print(isinstance( self._creatures_list[n], Creature))
+            creatureMove = self._creatures_list[n].make_move([0,1,2])
+            print(creatureMove)
 
 
 def main():
@@ -71,11 +72,18 @@ def main():
     my_world = World((10,7))
     # print(my_world)
     print("Dimension of world: {}".format(my_world.w_dim))
-    my_world.placeCreature((4,5), object())
-    print(my_world)
+    #my_world.placeCreature((4,5), object())
+    #print(my_world)
 
     my_world.createFoodSupply(0.3)
     print(my_world)
+
+    creature_list = [Creature(types_of_creatures[0]), Creature(types_of_creatures[1])]
+
+    my_world.placeCreatures(creature_list)
+    print(my_world)
+
+    my_world.iterateWorld()
 
 
 if __name__ == "__main__":
