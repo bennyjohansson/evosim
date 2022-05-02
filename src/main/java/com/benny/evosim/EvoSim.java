@@ -39,11 +39,13 @@ public class EvoSim {
         /*
         *Setting initiatl parameters
         */
-        int[] worldSize = {20, 20};
-        int numberOfCreatures = 100;
+        int[] worldSize = {30, 30};
+        int numberOfCreatures = 300;
         int numberOfFoodSpots = 30;
-        int foodAmount = 3;
+        int numberOfNewFoodSpots = 20;
+        int foodAmount = 20;
         int creatureVision = 2;
+        
         
         /* Create new World */
         CreatureWorld theWorld = new CreatureWorld(worldSize);
@@ -59,17 +61,38 @@ public class EvoSim {
         DigitalCreature tmpCreature = theWorld.getCreatureFromList(1);
         
         /* Checking surrounding - just for test */
-        tmpCreature.scanSurrounding(creatureVision);
+        tmpCreature.scanSurrounding();
         
         
         /* Initiating eat-and-move process */
         theWorld.printWorld();
         System.out.println("Creatures before: " + theWorld.getNumberOfCreatures());
-        for (int i = 0; i<50; i++) {
+        for (int i = 0; i<1000; i++) {
             
-            theWorld.doEatCycle();
+            System.out.println("-------------------------------");
+            System.out.println("YEAR " + i);
+            System.out.println("-------------------------------");
+            
+            
             theWorld.doRandomMoveCycle();
-            theWorld.doFightCycle();
+            
+            theWorld.doActionCycle();
+            theWorld.doUpdateCycle();
+            
+            //If the colony is about to go extinct, clone the last 25 remaining creatures
+            if(theWorld.getNumberOfCreatures() <= 25) {
+                System.out.println("Initiating clone cycle");
+                theWorld.doCloneCycle();
+            } else {
+                theWorld.addCloneCount(0);
+            }
+            
+            if(i>400) {
+                numberOfNewFoodSpots =10;
+            }
+            
+            theWorld.addRandomFood(numberOfNewFoodSpots, foodAmount);
+            //theWorld.printWorld();
             
         }
         
@@ -79,6 +102,8 @@ public class EvoSim {
         System.out.println();
         
         theWorld.printWorld();
+        
+        theWorld.printStats();
         
       
 
