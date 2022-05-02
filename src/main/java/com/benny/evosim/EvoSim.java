@@ -87,7 +87,7 @@ public class EvoSim {
                 theWorld.addCloneCount(0);
             }
             
-            if(i>400) {
+            if(i>500) {
                 numberOfNewFoodSpots =10;
             }
             
