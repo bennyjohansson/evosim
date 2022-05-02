@@ -85,9 +85,9 @@ class World:
             upper = True
         if position[1] +1 >= self.w_dim[1]: # Right wall
             right = True
-        if position[0] + 1 >= self.w_dim[0]:
+        if position[0] + 1 >= self.w_dim[0]: # Bottom wall
             bottom = True
-        if position[1] - 1 <= -1:
+        if position[1] - 1 <= -1: # Left wall
             left = True
         
         # Detect upper wall row-1 out-of-bounds
