@@ -63,17 +63,19 @@ class World:
             print("Creature make move: ", self._creatures_list[n])
             #isinstance( self._creatures_list[n], Creature)
             #print(isinstance( self._creatures_list[n], Creature))
-            creatureMove = self._creatures_list[n].make_move([0,1,2])
+            creaturesSurrounding = self.creatureSurroundings(self._creatures_list[n].position,1)
+            print("My suroundings: ")
+            print(creaturesSurrounding)
+            creatureMove = self._creatures_list[n].make_move(creaturesSurrounding)
             print(creatureMove)
 
-    def creatureSurroundings(self, position = (0,6), vision=1):
+    def creatureSurroundings(self, position = (3,3), vision=1) -> pd.Series:
         '''Function that returns the suroundings of a creature'''
         # Wall detection
         wall = -1
         # Behöver generalisera för att funka med vision som inte är 1
         # övre/undre raden börjar på 3 vision ett och växer med +2 för varje vision
         # höger/vänster kolumn börjar på 1 vision ett, växer med +2 för varje vision
-        # Bugg i nuvarande version, hanterar inte hörnen när man slår i två bounds
 
         upper = False
         right = False
@@ -90,37 +92,86 @@ class World:
         if position[1] - 1 <= -1: # Left wall
             left = True
         
-        # Detect upper wall row-1 out-of-bounds
-        # Lägg till hantering för kombinationer i hörnen
-        if upper: # Upper wall
+
+
+        if upper and right: # Upper right corner
+            print("Upper right")
             ser1 = pd.Series([wall for i in range(3)])
-        else:
-            ser1 = pd.Series(self._grid.iloc[position[0]-1][position[1]-1:position[1]+1+1])
+            ser2 = pd.Series([wall])
+            ser3 = pd.concat([pd.Series([wall]), pd.Series(self._grid.iloc[position[0]+1][position[1]:position[1]-1-1:-1])]) # Kan vara dumt då out of bounds indexering kan ge tom dataframe som jag märkte nedan
+            ser4 = pd.Series(self._grid.iloc[position[0]][position[1]-1])  
+        
+        if bottom and right: # Bottom right corner
+            print("Bottom right")
+            ser1 = pd.concat([pd.Series(self._grid.iloc[position[0]-1][position[1]-1:position[1]+1:1]), pd.Series([wall])]) # Kan vara dumt då out of bounds indexering kan ge tom dataframe som jag märkte nedan
+            ser2 = pd.Series([wall])
+            ser3 = pd.Series([wall for i in range(3)])
+            ser4 = pd.Series(self._grid.iloc[position[0]][position[1]-1])  
+        
+        if upper and left: # Upper left corner
+            print("Upper left")
+            ser1 = pd.Series([wall for i in range(3)])
+            ser2 = pd.Series(self._grid.iloc[position[0]][position[1]+1])
+            ser3 = pd.concat([pd.Series([self._grid.iloc[position[0]+1][position[1]+1], self._grid.iloc[position[0]+1][position[1]]]), pd.Series([wall])])
+            ser4 = pd.Series([wall])
+        
+        if bottom and left: # Bottom left corner
+            print("Bottom left")
+            ser1 = pd.concat([pd.Series([wall]),pd.Series([self._grid.iloc[position[0]-1][position[1]], self._grid.iloc[position[0]-1][position[1]+1]])])
+            ser2 = pd.Series(self._grid.iloc[position[0]][position[1]+1])
+            ser3 = pd.Series([wall for i in range(3)])
+            ser4 = pd.Series([wall])
 
         # Detect right wall column+1 out-of-bounds
-        if right:
-            ser2 = pd.Series([wall for i in range(1)])
-        else:
-            ser2 = pd.Series(self._grid.iloc[position[0]][position[1]+1])
+        if right and not (upper or bottom):
+            print("right but not")
+            ser1 = pd.Series([wall for i in range(3)])
+            ser2 = pd.Series([wall])
+            ser3 = pd.Series([wall for i in range(3)])
+            ser4 = pd.Series([wall])
+            
+        # Detect left wall column-1 out-of-bounds
+        if left  and not (upper or bottom):
+            print("Left but not")
+            ser1 = pd.Series([wall for i in range(3)])
+            ser2 = pd.Series([wall])
+            ser3 = pd.Series([wall for i in range(3)])
+            ser4 = pd.Series([wall])
+
         
         # Detect lower wall row+1 out-of-bounds
-        if bottom:
+        if bottom and not (left or right):
+            print("Hit the bottom")
+            ser1 = pd.Series([wall for i in range(3)])
+            ser2 = pd.Series([wall])
             ser3 = pd.Series([wall for i in range(3)])
-        else:
+            ser4 = pd.Series([wall])
+
+
+        # Detect upper wall row-1 out-of-bounds
+        if upper and not (left or right):
+            print("Hit the ceiling")
+            ser1 = pd.Series([wall for i in range(3)])
+            ser2 = pd.Series([wall])
+            ser3 = pd.Series([wall for i in range(3)])
+            ser4 = pd.Series([wall])
+                 
+
+        if not (upper or bottom or right or left):
+            print("not a corner")
+            ser1 = pd.Series(self._grid.iloc[position[0]-1][position[1]-1:position[1]+1+1])
+            ser2 = pd.Series(self._grid.iloc[position[0]][position[1]+1])
             ser3 = pd.Series(self._grid.iloc[position[0]+1][position[1]+1:position[1]-1-1:-1])
-        
-        # Detect left wall column-1 out-of-bounds
-        if left:
-            ser4 = pd.Series([wall for i in range(1)])
-        else:
-            ser4 = pd.Series(self._grid.iloc[position[0]][position[1]-1])        
-            
+            ser4 = pd.Series(self._grid.iloc[position[0]][position[1]-1])  
+
+
         surroundings= pd.concat([ser1,ser2,ser3,ser4])
-        dummies = pd.get_dummies(surroundings) # drop_first funkar inte i det här läget
+        return surroundings
+        #dummies = pd.get_dummies(surroundings) # drop_first funkar inte i det här läget
         #print("Ser1: \n ",ser1, "ser2: \n ",ser2,"ser3: \n", ser3, "ser4: \n", ser4)
-        print(surroundings)
-        print(dummies)
-        print(dummies.columns)
+        #print(surroundings)
+        #print(dummies)
+        #print(dummies.columns)
 
 
 
