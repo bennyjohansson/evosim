@@ -4,10 +4,12 @@
  */
 package com.benny.evosim;
 
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 //import java.math.*;
 import org.ejml.simple.SimpleMatrix;
+import org.ejml.equation.Equation;
 
 /**
  *
@@ -21,12 +23,23 @@ public class DigitalCreature {
     int strength;
     int age;
     int visionLength;
-    int outputSize;
+    int actionReach;
+    int outputActionSize;
+    int outputMoveSize;
+    int numberOfLayers;
     int[] position;
     CreatureWorld world;
     SimpleMatrix W1;
     SimpleMatrix W2;
     SimpleMatrix W3;
+    SimpleMatrix b1;
+    SimpleMatrix b2;
+    
+     ArrayList<SimpleMatrix> actionLayerWeights = new ArrayList<>();
+     ArrayList<SimpleMatrix> actionLayerBias = new ArrayList<>();
+     
+     ArrayList<SimpleMatrix> moveLayerWeights = new ArrayList<>();
+     ArrayList<SimpleMatrix> moveLayerBias = new ArrayList<>();
 
     public DigitalCreature() {
     }
@@ -38,7 +51,13 @@ public class DigitalCreature {
         strength = setStrength;
         age = 1;
         visionLength = setVision;
-        outputSize = 4;
+        actionReach = 1;
+        outputActionSize = 4;
+        outputMoveSize = 8;
+        numberOfLayers = 5;
+        int currentLayerSize = 0;
+        int nextLayerSize = 0;
+        int numberOfObjects = 4;
 
         world = myWorld;
 
@@ -47,12 +66,49 @@ public class DigitalCreature {
         * 4 output actions (fight, eat, mate, nothing (?))
          */
         Random rand = new Random();
-        int visionVectorSize = (2 * visionLength + 1) * (2 * visionLength + 1);
+        
+        
+        //Should not be output size but number of categories!!!!
+        int visionVectorSize = numberOfObjects*(2 * visionLength + 1) * (2 * visionLength + 1);
+        int actionVectorSize = numberOfObjects*(2 * actionReach + 1) * (2 * actionReach + 1);
 
-        int W2size = Math.min(10, visionVectorSize);
-
-        W1 = SimpleMatrix.random_DDRM(W2size, visionVectorSize, -1, 1, rand);
-        W2 = SimpleMatrix.random_DDRM(outputSize, W2size, -1, 1, rand);
+        //Setting up action layer matrices
+        currentLayerSize = actionVectorSize;
+        nextLayerSize = currentLayerSize - (actionVectorSize - outputActionSize)/(numberOfLayers);
+        for (int i = 0; i < numberOfLayers; i++) {
+            
+            actionLayerWeights.add(SimpleMatrix.random_DDRM(nextLayerSize, currentLayerSize, -1, 1, rand));
+            actionLayerBias.add(SimpleMatrix.random_DDRM(nextLayerSize, 1, -1, 1, rand));
+            
+            //System.out.println("Layer " + i + " " + currentLayerSize + "x" + nextLayerSize);
+            
+            currentLayerSize = nextLayerSize;
+            nextLayerSize = currentLayerSize - (actionVectorSize - outputActionSize)/(numberOfLayers);
+            if(i == numberOfLayers-2) {
+                //System.out.println("SETTING LAYER");
+                nextLayerSize = outputActionSize;
+            }
+            
+        }
+        
+        //Setting up vision layer matrices
+        currentLayerSize = visionVectorSize;
+        nextLayerSize = (currentLayerSize - (visionVectorSize - outputMoveSize)/(numberOfLayers-1));
+        for (int i = 0; i < numberOfLayers; i++) {
+            
+            moveLayerWeights.add(SimpleMatrix.random_DDRM(nextLayerSize, currentLayerSize, -1, 1, rand));
+            moveLayerBias.add(SimpleMatrix.random_DDRM(nextLayerSize, 1, -1, 1, rand));
+            
+            
+            
+            currentLayerSize = nextLayerSize;
+            nextLayerSize = (currentLayerSize - (visionVectorSize - outputMoveSize)/(numberOfLayers));
+            if(i == numberOfLayers-1) {
+                nextLayerSize = outputMoveSize;
+            }
+            //System.out.println("Layer " + i + " " + currentLayerSize + "x" + nextLayerSize);
+            
+        }
     }
 
     public int getId() {
@@ -80,22 +136,43 @@ public class DigitalCreature {
         return visionLength;
     }
     
-    public SimpleMatrix getWeights(int myLayer) {
+    public SimpleMatrix getActionWeights(int myLayer) {
+        
+        return actionLayerWeights.get(myLayer);
+        
+    }
+    
+    
+    public SimpleMatrix getActionBias(int myLayer) {
         
         
-        if(myLayer == 1) {
-            return W1;
-        } else if(myLayer == 2) {
-            return W2;
-        } else {
-            return null;
-        }
+       return actionLayerBias.get(myLayer);
+        
+    }
+    
+    public SimpleMatrix getMoveWeights(int myLayer) {
+        
+        return moveLayerWeights.get(myLayer);
+        
+    }
+    
+    
+    public SimpleMatrix getMoveBias(int myLayer) {
+        
+        
+       return moveLayerBias.get(myLayer);
         
     }
 
     public void setPosition(int[] myPosition) {
 
         position = myPosition;
+
+    }
+    
+    public void setWx(int myLayer, SimpleMatrix Wx) {
+
+        actionLayerWeights.set(myLayer, Wx);
 
     }
     
@@ -110,6 +187,24 @@ public class DigitalCreature {
         W2 = Wx;
 
     }
+    
+    public void setbx(int myLayer, SimpleMatrix bx) {
+
+        actionLayerBias.set(myLayer, bx);
+
+    }
+    
+    public void setb1(SimpleMatrix bx) {
+
+        b1 = bx;
+
+    }
+    
+    public void setb2(SimpleMatrix bx) {
+
+        b2 = bx;
+
+    }
 
     /*
     * Action functions
@@ -121,28 +216,34 @@ public class DigitalCreature {
         double maxValue = 0;
         String action = "";
 
-        SimpleMatrix visionVector = scanSurrounding();
-        SimpleMatrix W1output = new SimpleMatrix(W2.numCols(), 1);
-        SimpleMatrix W2output = new SimpleMatrix(outputSize, 1);
+        SimpleMatrix actionVector = scanActionArea();
+//        SimpleMatrix W1output = new SimpleMatrix(W2.numCols(), 1);
+//        SimpleMatrix W2output = new SimpleMatrix(outputSize, 1);
+        
+        
         //SimpleMatrix W2outputRELU = new SimpleMatrix(outputSize,1);
+        
+        SimpleMatrix inputVector = actionVector;
+        
+        for(int l = 0; l < numberOfLayers; l++) {
+            
+            SimpleMatrix Wl = getActionWeights(l);
+            SimpleMatrix bl = getActionBias(l);
+            
+            //System.out.println(Wl.numCols() + "x" + Wl.numRows());
+            //System.out.println(inputVector.numCols() + "x" + inputVector.numRows());
+            
+            SimpleMatrix Wlout = Wl.mult(inputVector);
+            Wlout = Wlout.plus(bl);
+            inputVector = Functions.sigmoidFunction(Wlout);
+            
+        
+        }
+        
+        indexMax = Functions.findVectorIndexMax(inputVector);
+        maxValue = inputVector.get(indexMax, 0);
 
-        //Layer 1
-        W1output = W1.mult(visionVector);
-        W1output = Functions.sigmoidFunction(W1output);
-        //Need to add + b
-
-        //Layer 2
-        W2output = W2.mult(W1output);
-        W2output = Functions.sigmoidFunction(W2output);
-        //Need to add + b
-
-        W2output = Functions.sigmoidFunction(W2output);
-
-        //W2output.print();
-        indexMax = Functions.findVectorIndexMax(W2output);
-        maxValue = W2output.get(indexMax, 0);
-
-        //System.out.println(maxValue);
+        //System.out.println("IndexMax: " + indexMax);
         if (!(maxValue >= threshold)) {
             //Noth high enough activation
             action = "doNothing";
@@ -150,22 +251,26 @@ public class DigitalCreature {
 
             switch (indexMax) {
                 case (0): {
-                    action = "Fight";
+                    action = "Reproduce";
+                    
                     break;
 
                 }
                 case (1): {
                     action = "Eat";
+                    //System.out.println(action);
                     break;
 
                 }
                 case (2): {
-                    action = "Reproduce";
+                    action = "Fight";
+                    //System.out.println(action);
                     break;
 
                 }
                 case (3): {
                     action = "doNothing";
+                    //System.out.println(action);
                     break;
                 }
                 default:
@@ -173,11 +278,32 @@ public class DigitalCreature {
             }
 
         }
-
-        System.out.println("Action: " + action);
+        //System.out.println("Creature " + getId() + ": " + action);
+        //System.out.println("Action: " + action);
 
         return action;
 
+    }
+    
+    public DigitalCreature update() {
+
+        
+        energy--;
+        if(energy < 0) {
+            System.out.println("Creature " + id + " died by starvation");
+            return this;
+        }
+        
+        age++;
+        int MAX_AGE = 100;
+        if(age > MAX_AGE) {
+            System.out.println("Creature " + id + " died by age");
+            return this;
+        }
+       return null;
+        
+        
+        
     }
 
     //Eats all the food within 1 step
@@ -225,9 +351,10 @@ public class DigitalCreature {
 
                 //If opponent available, fight and exit
                 if (!(tmpCreature == null)) {
-
+                    //return tmpCreature;
+                        
                     //Attacker stronger and wins
-                    if (strength > tmpCreature.getStrength()) {
+                    if (strength >= tmpCreature.getStrength()) {
 
                         System.out.println("Creature killed by: " + tmpPosition[0] + "," + tmpPosition[1]);
 
@@ -277,38 +404,42 @@ public class DigitalCreature {
                    
                     //Setting values from active part
                     int setId = 0;
+                    setId = world.getStatsModule().getCreatureIdCount() + 1;
+                    
                     String setType = getType();
-                    int setEnergy = 10;
+                    int setEnergy = 3;
                     int setVision = getVisionLength();
-                    
-                    //Setting average values from mum and dad
                     int setStrength = Math.round((getStrength() + tmpCreature.getStrength())/2);
-                    SimpleMatrix W11 = getWeights(1).plus(tmpCreature.getWeights(1)).scale(1/2);
-                    SimpleMatrix W22 = getWeights(2).plus(tmpCreature.getWeights(2)).scale(1/2);;
-                    
                     
                     //Creating the baby
                     theBaby = new DigitalCreature(setId, setType, setEnergy, setStrength, setVision, world);
                     
-                    //Setting W1 and W2
-                    theBaby.setW1(W11);
-                    theBaby.setW2(W22);
-                    
+                    //Setting Neural nets values from mum and dad
+                    for (int l = 0; l<numberOfLayers; l++) {
+                        //getActionBias(l).print("%10.2f");
+                        theBaby.setWx(l, getActionWeights(l).plus(tmpCreature.getActionWeights(l)).scale(0.5));
+                        theBaby.setbx(l, getActionBias(l).plus(tmpCreature.getActionBias(l)).scale(0.5));
+                        
+                        //theBaby.getActionWeights(l).print("%10.2f");
+                    }
+                   
+      
                     //Adding creature, looping over nearby cells
                     for (int b = -1; b < 2; b++) {
                         newPosition[1] = position[1] + b;
                         for (int a = -1; a < 2; a++) {
 
                         newPosition[0] = position[0] + a;
-                            
+                            //System.out.println("Creature " + getId() + " trying to add " + setId + " at position " + newPosition[0] + ", " + newPosition[1]);
                             if(world.addCreature(theBaby, newPosition)) {
-                                System.out.println("YES - WE MADE A BABY");
+                                //System.out.println("YES - WE MADE A BABY " + setId);
                                 
                                 return true;
                                 
                             }
                         }
                     }
+                    return false;
                     
                 } else {
                     return false;
@@ -320,6 +451,157 @@ public class DigitalCreature {
 
         return false;
     }
+    
+    //Tries to shag first found neighbour
+    public boolean createClone() {
+
+       
+        int[] newPosition = {0, 0};
+        DigitalCreature theClone = null;
+
+        int setId = 0;
+        setId = world.getStatsModule().getCreatureIdCount() + 1;
+        String setType = getType();
+        int setEnergy = 30;
+        int setVision = getVisionLength();
+        int setStrength = strength;
+
+        //Creating the baby
+        theClone = new DigitalCreature(setId, setType, setEnergy, setStrength, setVision, world);
+
+        //Setting W1 and W2, b1 and b2
+        theClone.setW1(W1);
+        theClone.setW2(W2);
+        theClone.setb1(b1);
+        theClone.setb2(b2);
+
+        //Adding creature, looping over nearby cells
+        for (int b = -1; b < 2; b++) {
+            newPosition[1] = position[1] + b;
+            for (int a = -1; a < 2; a++) {
+
+                newPosition[0] = position[0] + a;
+                System.out.println("Creature " + getId() + " trying to add " + setId + " at position " + newPosition[0] + ", " + newPosition[1]);
+                if (world.addCreature(theClone, newPosition)) {
+                    System.out.println("YES - WE MADE a clone " + setId);
+
+                    return true;
+
+                }
+            }
+        }
+        return false;
+
+    }
+    
+    public String getMoveDirection() {
+        
+        double threshold = 0.5;
+        int indexMax = 0;
+        double maxValue = 0;
+        String direction = "";
+
+        SimpleMatrix visionVector = scanSurrounding();
+        
+        
+        
+        SimpleMatrix inputVector = visionVector;
+        
+        for(int l = 0; l < numberOfLayers; l++) {
+            
+            SimpleMatrix Wl = getMoveWeights(l);
+            SimpleMatrix bl = getMoveBias(l);
+            
+            //System.out.println(Wl.numCols() + "x"+  Wl.numRows());
+            //System.out.println(inputVector.numCols() + "x"+  inputVector.numRows());
+            SimpleMatrix Wlout = Wl.mult(inputVector);
+            Wlout = Wlout.plus(bl);
+            inputVector = Functions.sigmoidFunction(Wlout);
+            //System.out.println(inputVector.numCols() + "x"+  inputVector.numRows());
+        
+        }
+        
+        indexMax = Functions.findVectorIndexMax(inputVector);
+        maxValue = inputVector.get(indexMax, 0);
+
+        //System.out.println("IndexMax: " + indexMax);
+        if (!(maxValue >= threshold)) {
+            //Noth high enough activation
+            direction = "";
+        } else {
+
+            switch (indexMax) {
+                case (0): {
+                    direction = "N";
+                    break;
+
+                }
+                case (1): {
+                    direction = "S";
+                    //System.out.println(action);
+                    break;
+
+                }
+                case (2): {
+                    direction = "E";
+                    //System.out.println(action);
+                    break;
+
+                }
+                case (3): {
+                    direction = "W";
+                    //System.out.println(action);
+                    break;
+                }
+                case (4): {
+                    direction = "NE";
+                    break;
+
+                }
+                case (5): {
+                    direction = "NW";
+                    //System.out.println(action);
+                    break;
+
+                }
+                case (6): {
+                    direction = "SE";
+                    //System.out.println(action);
+                    break;
+
+                }
+                case (7): {
+                    direction = "SW";
+                    //System.out.println(action);
+                    break;
+                }
+                default:
+                //What now
+            }
+
+        }
+        //System.out.println("Creature " + getId() + ": " + direction);
+        //System.out.println("Action: " + action);
+
+        return direction;
+        
+        
+    }
+    
+    public boolean moveNN() {
+        
+        String direction = "";
+        direction = getMoveDirection();
+        
+        if(direction == "") {
+            return false;
+        } else {
+            return move(direction);
+        }
+        
+        
+    }
+   
 
     public boolean move(String myDirection) {
 
@@ -363,7 +645,7 @@ public class DigitalCreature {
         /*
         * Checking grid boundaries
          */
-        if (tmpPosition[0] >= worldSize[0]) {
+        if (tmpPosition[0] >= worldSize[0]-1) {
             tmpPosition[0] = worldSize[0] - 1;
             //System.out.println("Trying to move outside x-range > max");
         }
@@ -372,7 +654,7 @@ public class DigitalCreature {
             //System.out.println("Trying to move outside x-range < 0");
         }
 
-        if (tmpPosition[1] >= worldSize[1]) {
+        if (tmpPosition[1] >= worldSize[1]-1) {
             tmpPosition[1] = worldSize[1] - 1;
             //System.out.println("Trying to move outside y-range < max");
         }
@@ -397,6 +679,8 @@ public class DigitalCreature {
         }
 
     }
+    
+    
 
     /*
     * Looks "vision" steps in either direction and returns a column vector with the contents of the cells
@@ -407,11 +691,23 @@ public class DigitalCreature {
          */
 
         //Object[] ret = new Object[4];
+        
+        int numberOfObjects = 4;
 
         /*
         *Scanning area of "vision" around the creature for other creatures and food. 
          */
         SimpleMatrix surrounding = new SimpleMatrix((2 * visionLength + 1) * (2 * visionLength + 1), 1);
+        SimpleMatrix surrounding2 = new SimpleMatrix(numberOfObjects*(2 * visionLength + 1) * (2 * visionLength + 1), 1);
+        
+        //Temp vector and counters for keeping one grid state triplet represents {wall, creature, food, empty}
+        SimpleMatrix triplet = new SimpleMatrix(numberOfObjects, 1);
+        int index1 = 0;
+        int index2 = index1 + numberOfObjects - 1;
+        
+        Equation eq = new Equation();
+        eq.alias(index1,"index1", index2,"index2", surrounding2,"surrounding2", triplet, "triplet");
+           
         int matrixCounter = 0;
 
         int[] scanPosition = {0, 0};
@@ -432,26 +728,124 @@ public class DigitalCreature {
                 scanPosition[1] = j;
 
                 if (!(world.positionExists(scanPosition))) {
-                    //Checking that we are inside the world
-                    surrounding.set(matrixCounter, 3);
+                    //Checking that we are inside the world {wall, creature, food, empty}
+                    //surrounding.set(matrixCounter, 3);
+                    
+                    triplet.set(0,1);
+                    
                     //System.out.println("Outside range at position " + scanPosition[0] + "," + scanPosition[1]);
 
                 } else if (world.positionHasCreature(scanPosition) && (!(scanPosition[0] == position[0] && scanPosition[1] == position[1]))) {
                     //Checking for creatures
                     //System.out.println("Creature found at position " + scanPosition[0] + "," + scanPosition[1]);
-                    surrounding.set(matrixCounter, 1);
+                    //surrounding.set(matrixCounter, 1);
+                    
+                    triplet.set(1,1);
+                    
 
                 } else if (world.getFoodReserve(scanPosition) > 0) {
                     //Checking for food
                     //System.out.println("Food found at position " + scanPosition[0] + "," + scanPosition[1]);
-                    surrounding.set(matrixCounter, 2);
+                    //surrounding.set(matrixCounter, 2);
+                    triplet.set(2,1);
+                    
+                } else {
+                    //Empty grid
+                    triplet.set(3,1);
+                    
                 }
+                eq.process("surrounding2(index1:index2) = triplet(:)"); 
+                index1 += numberOfObjects;
+                index2 = index1 + numberOfObjects - 1;
+                eq.alias(index1,"index1", index2,"index2", surrounding2,"surrounding2", triplet, "triplet");
+           
                 matrixCounter++;
             }
 
         }
-        //surrounding.print();
-        return surrounding;
+        //surrounding2.print();
+        return surrounding2;
+    }
+    
+    /*
+    * Looks "actionReach" steps in either direction and returns a column vector with the contents of the cells
+     */
+    public SimpleMatrix scanActionArea() {
+        
+
+        /*
+        *Scanning area of "actionReach" around the creature for other creatures and food. 
+         */
+        
+        int numberOfObjects = 4;
+        //SimpleMatrix surrounding = new SimpleMatrix((2 * actionReach + 1) * (2 * actionReach + 1), 1);
+        SimpleMatrix surrounding2 = new SimpleMatrix(numberOfObjects*(2 * actionReach + 1) * (2 * actionReach + 1), 1);
+        
+        //Temp vector and counters for keeping one grid state triplet represents {wall, creature, food, empty}
+        SimpleMatrix triplet = new SimpleMatrix(numberOfObjects, 1);
+        int index1 = 0;
+        int index2 = index1 + numberOfObjects - 1;
+        
+        Equation eq = new Equation();
+        eq.alias(index1,"index1", index2,"index2", surrounding2,"surrounding2", triplet, "triplet");
+           
+        int matrixCounter = 0;
+
+        int[] scanPosition = {0, 0};
+
+        //Checking world boundaries
+        int startX = position[0] - actionReach; 
+        int stopX = position[0] + actionReach; 
+
+        int startY = position[1] - actionReach; 
+        int stopY = position[1] + actionReach; 
+
+        /*Scanning surrounding for food and creatures */
+        
+        for (int j = startY; j <= stopY; j++) {
+            for (int i = startX; i <= stopX; i++) {
+
+                scanPosition[0] = i;
+                scanPosition[1] = j;
+
+                if (!(world.positionExists(scanPosition))) {
+                    //Checking that we are inside the world {wall, creature, food, empty}
+                    //surrounding.set(matrixCounter, 3);
+                    
+                    triplet.set(0,1);
+                    
+                    //System.out.println("Outside range at position " + scanPosition[0] + "," + scanPosition[1]);
+
+                } else if (world.positionHasCreature(scanPosition) && (!(scanPosition[0] == position[0] && scanPosition[1] == position[1]))) {
+                    //Checking for creatures
+                    //System.out.println("Creature found at position " + scanPosition[0] + "," + scanPosition[1]);
+                    //surrounding.set(matrixCounter, 1);
+                    
+                    triplet.set(1,1);
+                    
+
+                } else if (world.getFoodReserve(scanPosition) > 0) {
+                    //Checking for food
+                    //System.out.println("Food found at position " + scanPosition[0] + "," + scanPosition[1]);
+                    //surrounding.set(matrixCounter, 2);
+                    triplet.set(2,1);
+                    
+                } else {
+                    //Empty grid
+                    triplet.set(3,1);
+                    
+                }
+                eq.process("surrounding2(index1:index2) = triplet(:)"); 
+                index1 += numberOfObjects;
+                index2 = index1 + numberOfObjects - 1;
+                eq.alias(index1,"index1", index2,"index2", surrounding2,"surrounding2", triplet, "triplet");
+           
+                matrixCounter++;
+            }
+
+        }
+        //surrounding2.print();
+        return surrounding2;
     }
 
     public String getType() {
