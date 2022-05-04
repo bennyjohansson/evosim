@@ -48,7 +48,13 @@ class Creature:
 
     def make_move(self, surroundings: pd.array):
         # Call brain with surroundings and make move
-        return surroundings
+        # Normalise order wall, empty, creature, food
+        # Attack
+        # Eat
+        # Move
+        # Do nothing
+        print("Iam: ", self)
+        return surroundings.to_numpy().flatten()
 
 def main():
     # Test classes
