@@ -54,7 +54,9 @@ class Creature:
         # Move
         # Do nothing
         print("Iam: ", self)
-        return surroundings.to_numpy().flatten()
+        flatSurroundings = surroundings.to_numpy().flatten()
+        
+        return flatSurroundings
 
 def main():
     # Test classes
