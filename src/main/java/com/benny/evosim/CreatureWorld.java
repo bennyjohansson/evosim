@@ -75,7 +75,7 @@ public class CreatureWorld {
 
             int[] myPosition = getRandomLocation();
             int setStrength = ThreadLocalRandom.current().nextInt(0, 10);
-            int setEnergy = 10;
+            int setEnergy = 40;
             int setVision = 2;
             myId = stats.getCreatureIdCount() + 1;
 
@@ -209,8 +209,26 @@ public class CreatureWorld {
         Iterator<DigitalCreature>  iter= creatureList.iterator();
 
         while (iter.hasNext()) {
-            iter.next().move("random");
+            //iter.next().move("random");
+            iter.next().moveNN();
         }
+        
+    }
+    
+    public void addCloneCount(int count) {
+         stats.addToCloneCount(count);
+    }
+    
+    public void doCloneCycle() {
+        
+        int cloneCount = 0;
+        Iterator<DigitalCreature>  iter= creatureList.iterator();
+
+        while (iter.hasNext()) {
+            iter.next().createClone();
+            cloneCount++;
+        }
+        stats.addToCloneCount(cloneCount);
         
     }
     
@@ -248,7 +266,7 @@ public class CreatureWorld {
                 stats.setCreatureIdCount(myCreature.getId());
                 return true;
             } else {
-                System.out.println("Unable to add creature " + myCreature.getId() + " - position taken");
+                //System.out.println("Unable to add creature " + myCreature.getId() + " - position taken");
                 return false;
             }
         } else {
@@ -385,7 +403,7 @@ public class CreatureWorld {
     public boolean moveCreature(DigitalCreature theCreature, int[] newPosition) {
         
         int[] myPosition = theCreature.getPosition();
-        System.out.println("Creature " + theCreature.getId() + " moved from (" + myPosition[0] + " , " + myPosition[1] + ") to (" + newPosition[0] + " , " + newPosition[1] + ")");
+        //System.out.println("Creature " + theCreature.getId() + " moved from (" + myPosition[0] + " , " + myPosition[1] + ") to (" + newPosition[0] + " , " + newPosition[1] + ")");
 //        System.out.println("Creature " + theCreature.getId() + " moved from (" + myPosition[0] + " , "+ myPosition[1]);
 //        System.out.println("Creature " + theCreature.getId() + " moving to (" + newPosition[0] + " , "+ newPosition[1]);
         GridContainer oldContainer = theGrid.get(myPosition[0]).get(myPosition[1]);
@@ -396,10 +414,10 @@ public class CreatureWorld {
             newContainer.addCreature(theCreature);
             oldContainer.removeCreature();
             theCreature.setPosition(newPosition);
-            System.out.println("Creature " + theCreature.getId() + " moved from (" + myPosition[0] + " , " + myPosition[1] + ") to (" + newPosition[0] + " , " + newPosition[1] + ")");
+            //System.out.println("Creature " + theCreature.getId() + " moved from (" + myPosition[0] + " , " + myPosition[1] + ") to (" + newPosition[0] + " , " + newPosition[1] + ")");
             return true;
         } else {
-            System.out.println("Unable to move here - position taken");
+            //System.out.println("Unable to move here - position taken");
             return false;
         }
     }

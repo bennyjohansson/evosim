@@ -21,6 +21,10 @@ public class StatisticsModule {
     ArrayList<Integer> fightCount = new ArrayList<>();
     ArrayList<Integer> reproduceCount = new ArrayList<>();
     ArrayList<Integer> doNothingCount = new ArrayList<>();
+    ArrayList<Integer> killedCount = new ArrayList<>();
+    ArrayList<Integer> birthCount = new ArrayList<>();
+    ArrayList<Integer> diedCount = new ArrayList<>();
+    ArrayList<Integer> cloneCount = new ArrayList<>();
     
 //    int[] fightCount;
 //    int[] reproduceCount;
@@ -64,8 +68,6 @@ public class StatisticsModule {
                 break;
             }
         }
-        
-        //Wrong input
        
         return myReturn;
     }
@@ -79,15 +81,27 @@ public class StatisticsModule {
     }
     
     public void addToReproduceCount(int myData) {
-        
         reproduceCount.add(myData);
-        
     }
     
     public void addToDoNothingCount(int myData) {
-        
         doNothingCount.add(myData);
-        
+    }
+    
+    public void addToKilledCount(int myData) {
+        killedCount.add(myData);
+    }
+    
+    public void addToDiedCount(int myData) {
+        diedCount.add(myData);
+    }
+    
+    public void addToBirthCount(int myData) {
+        birthCount.add(myData);
+    }
+    
+     public void addToCloneCount(int myData) {
+        cloneCount.add(myData);
     }
     
     
@@ -128,6 +142,19 @@ public class StatisticsModule {
         System.out.println(" - Killed Combat: " + numberOfCreaturesKilledInCombat);
         System.out.println(" - Killed Starve/age: " + numberOfCreaturesKilledByStarvation);
         System.out.println("Born: " + numberOfBabies);
+        System.out.println("");
+        
+       
+        System.out.println("---------------------");
+        System.out.println("Y" + ", EAT, " + "FIGHT, "+ " REPRODUCE, "+ " DO NOTHING, " + "BIRTH, " + "CLONED, " + "KILLED, " + "DIED");
+        for (int i = 0; i < eatCount.size(); i++) {
+            
+            System.out.println(i + ", " + eatCount.get(i) + ", "+ fightCount.get(i) + ", "+ reproduceCount.get(i) + ", "+ doNothingCount.get(i)+ ", "+ birthCount.get(i)+ ", " + cloneCount.get(i)+ ", "+ killedCount.get(i) + ", "+ diedCount.get(i));
+            
+        }
+    
+   
+        
     }
     
 }
