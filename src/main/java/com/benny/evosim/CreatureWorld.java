@@ -424,22 +424,55 @@ public class CreatureWorld {
 
     public void printWorld() {
 
+       //Declaring colors for terminal print
+       String ANSI_RESET = "\u001B[0m";
+       String ANSI_BLACK = "\u001B[30m";
+       String ANSI_RED = "\u001B[31m";
+       String ANSI_GREEN = "\u001B[32m";
+       String ANSI_YELLOW = "\u001B[33m";
+       String ANSI_BLUE = "\u001B[34m";
+       String ANSI_PURPLE = "\u001B[35m";
+       String ANSI_CYAN = "\u001B[36m";
+       String ANSI_WHITE = "\u001B[37m";
+
+       String printColor = ANSI_RESET;
+
         worldSize = this.getSize();
         String gridContent = "0";
         for (int j = 0; j < worldSize[1]; j++) {
             for (int i = 0; i < worldSize[0]; i++) {
                 GridContainer tmpContainer = theGrid.get(i).get(j);
+                
+
                 if (tmpContainer.isEmpty()) {
                     gridContent = "0";
                 } else {
+                    String creatureType = tmpContainer.getCreature().getType();
                     gridContent = "c";
+                    //Checking creature type and assigning printColor to the type
+                    if (creatureType.equals("Kill")) {
+                        printColor = ANSI_RED;
+                    } else if (creatureType.equals("Eat")) {
+                        printColor = ANSI_GREEN;
+                    }
+                    else if (creatureType.equals("Clone")) {
+                        printColor = ANSI_BLUE;
+                    }
+                    else if (creatureType.equals("Reproduce")) {
+                        printColor = ANSI_PURPLE;
+                    }
+                    else if (creatureType.equals("Switcher")) {
+                        printColor = ANSI_CYAN;
+                    }
                 }
                 if (tmpContainer.getFoodReserve() > 0) {
                     gridContent = "f";
                 }
                 
 
-                System.out.print(gridContent);
+                System.out.print(printColor + gridContent + ANSI_RESET);
+                printColor = ANSI_RESET;
+
                 if (i != worldSize[0] - 1) {
                     System.out.print(",");
                 }

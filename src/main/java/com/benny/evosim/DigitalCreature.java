@@ -6,6 +6,7 @@ package com.benny.evosim;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.LinkedList;
 import java.util.concurrent.ThreadLocalRandom;
 //import java.math.*;
 import org.ejml.simple.SimpleMatrix;
@@ -28,7 +29,9 @@ public class DigitalCreature {
     int outputMoveSize;
     int numberOfLayers;
     int[] position;
+    LinkedList<String> lastActions = new LinkedList<>();
     CreatureWorld world;
+    
 //    SimpleMatrix W1;
 //    SimpleMatrix W2;
 //    SimpleMatrix W3;
@@ -186,6 +189,26 @@ public class DigitalCreature {
 
     }
 
+    //updating type based on the lastActions list
+    public void updateType() {
+        //First checking if all the elements of the list are the same, then we can set the type
+        //Checking if all the elements are the same
+        boolean allEqual = lastActions.stream().distinct().limit(2).count() <= 1;
+        String setType = getType();
+
+        if (lastActions.size() > 0) {
+            if(allEqual) {
+                setType = lastActions.getFirst();
+            } else {
+                setType = "Switcher";
+            }
+        } else {
+            setType = "Neutral";
+        }
+
+        type = setType;
+    }
+
     /*
     * Action functions
      */
@@ -228,30 +251,47 @@ public class DigitalCreature {
             switch (indexMax) {
                 case (0): {
                     action = "Reproduce";
+                    //adding action to lastActions
+                    //System.out.println(action);
+                    // Add to front
+                    lastActions.addFirst(action);
+
 
                     break;
 
                 }
                 case (1): {
                     action = "Eat";
+                    lastActions.addFirst(action);
                     //System.out.println(action);
                     break;
 
                 }
                 case (2): {
                     action = "Fight";
+                    lastActions.addFirst(action);
                     //System.out.println(action);
                     break;
 
                 }
                 case (3): {
                     action = "doNothing";
+                    lastActions.addFirst(action);
                     //System.out.println(action);
                     break;
                 }
                 default:
                 //What now
             }
+            //Truncating lastactions to only store 5 last actions
+            // Truncate to 5 most recent
+            while (lastActions.size() > 5) {
+                lastActions.removeLast();
+            }
+            //printing the lastactions list
+            // System.out.println("Last actions: " + lastActions);
+            //Updating type
+            updateType();
 
         }
         //System.out.println("Creature " + getId() + ": " + action);

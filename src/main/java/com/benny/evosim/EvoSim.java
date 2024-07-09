@@ -67,7 +67,7 @@ public class EvoSim {
         /* Initiating eat-and-move process */
         theWorld.printWorld();
         System.out.println("Creatures before: " + theWorld.getNumberOfCreatures());
-        for (int i = 0; i<1000; i++) {
+        for (int i = 0; i<10000; i++) {
             
             System.out.println("-------------------------------");
             System.out.println("YEAR " + i);
@@ -79,11 +79,15 @@ public class EvoSim {
             
             
             //If the colony is about to go extinct, clone the last 25 remaining creatures
+            // if(theWorld.getNumberOfCreatures() <= 100) {
+            //     System.out.println("Initiating clone cycle");
+            //     theWorld.doCloneCycle();
+            // } else {
+            //     theWorld.addCloneCount(0);
+            // }
+            
             if(theWorld.getNumberOfCreatures() <= 100) {
-                System.out.println("Initiating clone cycle");
-                theWorld.doCloneCycle();
-            } else {
-                theWorld.addCloneCount(0);
+                theWorld.addRandomCreatures(numberOfCreatures);
             }
             
             if(i>20) {
@@ -91,7 +95,7 @@ public class EvoSim {
             }
             
             theWorld.addRandomFood(numberOfNewFoodSpots, foodAmount);
-            //theWorld.printWorld();
+            theWorld.printWorld();
             
         }
         
