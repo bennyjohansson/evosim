@@ -1,4 +1,8 @@
-/Users/bennyjohansson/Projects/evosim/evosim/src/main/java/com/benny/evosim/CreatureWorld.java
-/Users/bennyjohansson/Projects/evosim/evosim/src/main/java/com/benny/evosim/GridContainer.java
-/Users/bennyjohansson/Projects/evosim/evosim/src/main/java/com/benny/evosim/EvoSim.java
-/Users/bennyjohansson/Projects/evosim/evosim/src/main/java/com/benny/evosim/DigitalCreature.java
+/Users/bennyjohansson/Documents/Projects/evosim/evosim/src/main/java/com/benny/evosim/Constants.java
+/Users/bennyjohansson/Documents/Projects/evosim/evosim/src/main/java/com/benny/evosim/CreatureList.java
+/Users/bennyjohansson/Documents/Projects/evosim/evosim/src/main/java/com/benny/evosim/CreatureWorld.java
+/Users/bennyjohansson/Documents/Projects/evosim/evosim/src/main/java/com/benny/evosim/DigitalCreature.java
+/Users/bennyjohansson/Documents/Projects/evosim/evosim/src/main/java/com/benny/evosim/EvoSim.java
+/Users/bennyjohansson/Documents/Projects/evosim/evosim/src/main/java/com/benny/evosim/Functions.java
+/Users/bennyjohansson/Documents/Projects/evosim/evosim/src/main/java/com/benny/evosim/GridContainer.java
+/Users/bennyjohansson/Documents/Projects/evosim/evosim/src/main/java/com/benny/evosim/StatisticsModule.java

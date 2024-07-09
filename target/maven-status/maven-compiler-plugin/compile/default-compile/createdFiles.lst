@@ -1,4 +1,8 @@
-com/benny/evosim/CreatureWorld.class
+com/benny/evosim/CreatureList.class
 com/benny/evosim/DigitalCreature.class
 com/benny/evosim/EvoSim.class
+com/benny/evosim/StatisticsModule.class
+com/benny/evosim/CreatureWorld.class
 com/benny/evosim/GridContainer.class
+com/benny/evosim/Constants.class
+com/benny/evosim/Functions.class
