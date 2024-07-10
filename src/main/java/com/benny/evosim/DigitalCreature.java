@@ -55,7 +55,7 @@ public class DigitalCreature {
         age = 1;
         visionLength = setVision;
         actionReach = 1;
-        outputActionSize = 4;
+        outputActionSize = 5;
         outputMoveSize = 8;
         numberOfLayers = 5;
         int currentLayerSize = 0;
@@ -214,7 +214,7 @@ public class DigitalCreature {
      */
     public String getAction() {
 
-        double threshold = 0.5;
+        double threshold = 0.3;
         int indexMax = 0;
         double maxValue = 0;
         String action = "";
@@ -251,14 +251,10 @@ public class DigitalCreature {
             switch (indexMax) {
                 case (0): {
                     action = "Reproduce";
-                    //adding action to lastActions
-                    //System.out.println(action);
-                    // Add to front
                     lastActions.addFirst(action);
 
 
                     break;
-
                 }
                 case (1): {
                     action = "Eat";
@@ -275,6 +271,13 @@ public class DigitalCreature {
 
                 }
                 case (3): {
+                    action = "Clone";
+                    lastActions.addFirst(action);
+                    //System.out.println(action);
+                    break;
+
+                }
+                case (4): {
                     action = "doNothing";
                     lastActions.addFirst(action);
                     //System.out.println(action);
@@ -305,14 +308,14 @@ public class DigitalCreature {
 
         energy--;
         if (energy <= 0) {
-            System.out.println("Creature " + id + " died by starvation");
+            // System.out.println("Creature " + id + " died by starvation");
             return this;
         }
 
         age++;
-        int MAX_AGE = 100;
+        int MAX_AGE = world.constants.getMaxAge();
         if (age > MAX_AGE) {
-            System.out.println("Creature " + id + " died by age");
+            // System.out.println("Creature " + id + " died by age");
             return this;
         }
         return null;
@@ -369,7 +372,7 @@ public class DigitalCreature {
                     //Attacker stronger and wins
                     if (strength >= tmpCreature.getStrength()) {
 
-                        System.out.println("Creature killed by: " + tmpPosition[0] + "," + tmpPosition[1]);
+                        // System.out.println("Creature killed by: " + tmpPosition[0] + "," + tmpPosition[1]);
 
                         return tmpCreature;
                     }
@@ -377,7 +380,7 @@ public class DigitalCreature {
                     //Opponent stronger and wins
                     if (strength < tmpCreature.getStrength()) {
 
-                        System.out.println("Attacker got killed at: " + position[0] + "," + position[1]);
+                        // System.out.println("Attacker got killed at: " + position[0] + "," + position[1]);
                         return this;
 
                     } else {
@@ -481,7 +484,7 @@ public class DigitalCreature {
     }
 
     //Tries to shag first found neighbour
-    public boolean createClone() {
+    public boolean createClone(boolean rescueCycle) {
 
         int[] newPosition = {0, 0};
         DigitalCreature theClone = null;
@@ -489,9 +492,15 @@ public class DigitalCreature {
         int setId = 0;
         setId = world.getStatsModule().getCreatureIdCount() + 1;
         String setType = getType();
-        int setEnergy = 30;
+        
+        int setEnergy = getEnergy() / 2;
+        if(rescueCycle) {
+            setEnergy = world.constants.getInitialEnergy();
+        }
+
         int setVision = getVisionLength();
         int setStrength = strength;
+        int[] worldSize = world.getSize();
 
         //Creating the baby
         theClone = new DigitalCreature(setId, setType, setEnergy, setStrength, setVision, world);
@@ -506,14 +515,20 @@ public class DigitalCreature {
 
         //Adding creature, looping over nearby cells
         for (int b = -1; b < 2; b++) {
-            newPosition[1] = position[1] + b;
+            //newposition[1] for the new vclone is the max of 0 and the current position + b
+            
+            newPosition[1] = Math.min(Math.max(0,position[1] + b), worldSize[1] - 1);
+
             for (int a = -1; a < 2; a++) {
 
-                newPosition[0] = position[0] + a;
-                System.out.println("Creature " + getId() + " trying to add " + setId + " at position " + newPosition[0] + ", " + newPosition[1]);
+                newPosition[0] = Math.min(Math.max(0,position[0] + a), worldSize[0] - 1);
+                // System.out.println("Creature " + getId() + " trying to add " + setId + " at position " + newPosition[0] + ", " + newPosition[1]);
                 if (world.addCreature(theClone, newPosition)) {
-                    System.out.println("YES - WE MADE a clone " + setId);
-
+                    // System.out.println("YES - WE MADE a clone " + setId);
+                    if(!rescueCycle) {
+                        energy /= 2;
+                    }
+                    // energy /= 2 ;
                     return true;
 
                 }
@@ -525,7 +540,7 @@ public class DigitalCreature {
 
     public String getMoveDirection() {
 
-        double threshold = 0.5;
+        double threshold = 0.1;
         int indexMax = 0;
         double maxValue = 0;
         String direction = "";

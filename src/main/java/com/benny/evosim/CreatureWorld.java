@@ -47,6 +47,7 @@ public class CreatureWorld {
     ArrayList<ArrayList<GridContainer>> theGrid = new ArrayList<>();
     List<DigitalCreature> creatureList = new CopyOnWriteArrayList<DigitalCreature>();
     StatisticsModule stats = new StatisticsModule();
+    Constants constants = new Constants();
 
     /*
         * Functions
@@ -75,12 +76,12 @@ public class CreatureWorld {
 
             int[] myPosition = getRandomLocation();
             int setStrength = ThreadLocalRandom.current().nextInt(0, 10);
-            int setEnergy = 40;
-            int setVision = 2;
+            int setEnergy = constants.getInitialEnergy();
+            int setVision = constants.getCreatureVision();
             myId = stats.getCreatureIdCount() + 1;
 
             if (addCreature(new DigitalCreature(myId, "killer", setEnergy, setStrength,setVision, this), myPosition)) {
-                System.out.println("Creature " + myId + " added at position (" + myPosition[0] + "," + myPosition[1] + ")");
+                // System.out.println("Creature " + myId + " added at position (" + myPosition[0] + "," + myPosition[1] + ")");
                 //stats.setCreatureIdCount(myId);
             }
         }
@@ -152,6 +153,7 @@ public class CreatureWorld {
         int doNothingCounter = 0;
         int killedCount = 0;
         int birthCount = 0;
+        int cloneCounter = 0;
         
 
         while (iter.hasNext()) {
@@ -182,11 +184,19 @@ public class CreatureWorld {
                     reproduceCounter++;
                     break;
                 }
+                case ("Clone"): {
+                    if(theActionCreature.createClone(false)) {
+                        cloneCounter++;
+                    }
+                    cloneCounter++;
+                    break;
+                }
                 case ("doNothing"): {
                     //Doing notheing
                     doNothingCounter++;
                     break;
                 }
+
 
             }
 
@@ -225,7 +235,7 @@ public class CreatureWorld {
         Iterator<DigitalCreature>  iter= creatureList.iterator();
 
         while (iter.hasNext()) {
-            iter.next().createClone();
+            iter.next().createClone(true);
             cloneCount++;
         }
         stats.addToCloneCount(cloneCount);

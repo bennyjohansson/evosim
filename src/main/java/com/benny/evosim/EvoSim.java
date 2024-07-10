@@ -4,12 +4,6 @@
  */
 package com.benny.evosim;
 
-import java.util.*;
-//import java.util.concurrent.ThreadLocalRandom;
-import org.ejml.simple.SimpleMatrix;
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.dense.row.RandomMatrices_DDRM;
-
 
 /**
  *
@@ -39,12 +33,12 @@ public class EvoSim {
         /*
         *Setting initiatl parameters
         */
-        int[] worldSize = {30, 30};
-        int numberOfCreatures = 300;
+        int[] worldSize = {60, 60};
+        int numberOfCreatures = 1500;
         int numberOfFoodSpots = 20;
         int numberOfNewFoodSpots = 10;
         int foodAmount = 20;
-        int creatureVision = 2;
+        int creatureVision = 1;
         
         
         /* Create new World */
@@ -78,18 +72,19 @@ public class EvoSim {
             theWorld.doActionCycle();
             
             
-            //If the colony is about to go extinct, clone the last 25 remaining creatures
-            // if(theWorld.getNumberOfCreatures() <= 100) {
-            //     System.out.println("Initiating clone cycle");
-            //     theWorld.doCloneCycle();
-            // } else {
-            //     theWorld.addCloneCount(0);
-            // }
-            
+            //If the colony is about to go extinct, clone the remaining creatures and add a few random
             if(theWorld.getNumberOfCreatures() <= 100) {
-                theWorld.addRandomCreatures(numberOfCreatures);
+                System.out.println("Initiating rescue cycle");
+                theWorld.doCloneCycle();
+                theWorld.addRandomCreatures(1000);
+            } else {
+                theWorld.addCloneCount(0);
             }
             
+            // if(theWorld.getNumberOfCreatures() <= 100) {
+            //     theWorld.addRandomCreatures(numberOfCreatures);
+            // }
+
             if(i>20) {
                 foodAmount =5;
             }
