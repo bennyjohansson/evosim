@@ -35,8 +35,8 @@ public class EvoSim {
         */
         int[] worldSize = {60, 60};
         int numberOfCreatures = 1500;
-        int numberOfFoodSpots = 20;
-        int numberOfNewFoodSpots = 10;
+        int numberOfFoodSpots = worldSize[0] * worldSize[1] / 5;
+        int numberOfNewFoodSpots = worldSize[0] * worldSize[1] / 5;
         int foodAmount = 20;
         int creatureVision = 1;
         
@@ -85,23 +85,23 @@ public class EvoSim {
             //     theWorld.addRandomCreatures(numberOfCreatures);
             // }
 
-            if(i>20) {
-                foodAmount =5;
-            }
+            // if(i>20) {
+            //     foodAmount =5;
+            // }
             
             theWorld.addRandomFood(numberOfNewFoodSpots, foodAmount);
             theWorld.printWorld();
             
         }
         
-        System.out.println();
-        System.out.println("Eat and move cycle complete");
-        System.out.println("Creatures after: " + theWorld.getNumberOfCreatures());
-        System.out.println();
+        // System.out.println();
+        // System.out.println("Eat and move cycle complete");
+        // System.out.println("Creatures after: " + theWorld.getNumberOfCreatures());
+        // System.out.println();
         
         theWorld.printWorld();
         
-        theWorld.printStats();
+        // theWorld.printStats();
         
       
 

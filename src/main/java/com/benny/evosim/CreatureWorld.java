@@ -455,8 +455,14 @@ public class CreatureWorld {
                 
 
                 if (tmpContainer.isEmpty()) {
-                    gridContent = "0";
-                } else {
+                    if (tmpContainer.getFoodReserve() > 0) {
+                        gridContent = "f";
+                        
+                    } else {
+                        gridContent = "0";
+                    }
+                    printColor = ANSI_RESET;
+                } else if(tmpContainer.hasCreature()) {
                     String creatureType = tmpContainer.getCreature().getType();
                     gridContent = "c";
                     //Checking creature type and assigning printColor to the type
@@ -474,10 +480,7 @@ public class CreatureWorld {
                     else if (creatureType.equals("Switcher")) {
                         printColor = ANSI_CYAN;
                     }
-                }
-                if (tmpContainer.getFoodReserve() > 0) {
-                    gridContent = "f";
-                }
+                } 
                 
 
                 System.out.print(printColor + gridContent + ANSI_RESET);
