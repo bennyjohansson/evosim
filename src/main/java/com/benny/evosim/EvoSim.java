@@ -34,10 +34,10 @@ public class EvoSim {
         *Setting initiatl parameters
         */
         int[] worldSize = {60, 60};
-        int numberOfCreatures = 2000;
-        int numberOfFoodSpots = worldSize[0] * worldSize[1] / 5;
-        int numberOfNewFoodSpots = worldSize[0] * worldSize[1] / 5;
-        int foodAmount = 20;
+        int numberOfCreatures = 100;
+        int numberOfFoodSpots = worldSize[0] * worldSize[1] / 10;
+        int numberOfNewFoodSpots = worldSize[0] * worldSize[1] / 10;
+        int foodAmount = 5;
         
         
         /* Create new World */
@@ -45,7 +45,7 @@ public class EvoSim {
         System.out.println("New world created with size " + worldSize[0] + "x" + worldSize[1]);
 
         /* Adding creatures to the world */
-        // theWorld.addRandomCreatures(numberOfCreatures);
+        theWorld.addRandomCreatures(1000);
         theWorld.addCreaturesFromFile(numberOfCreatures);
 
         /*Adding food to the world */
@@ -61,7 +61,7 @@ public class EvoSim {
         /* Initiating eat-and-move process */
         theWorld.printWorld();
         System.out.println("Creatures before: " + theWorld.getNumberOfCreatures());
-        for (int i = 0; i<200; i++) {
+        for (int i = 0; i<50000; i++) {
             
             System.out.println("-------------------------------");
             System.out.println("YEAR " + i);
@@ -76,10 +76,10 @@ public class EvoSim {
             if(theWorld.getNumberOfCreatures() <= 30) {
                 System.out.println("Initiating rescue cycle");
                 // theWorld.doCloneCycle();
-                // theWorld.addRandomCreatures(numberOfCreatures);
+                theWorld.addRandomCreatures(numberOfCreatures);
                 theWorld.addCreaturesFromFile(numberOfCreatures);
             } else {
-                theWorld.addCloneCount(0);
+                // theWorld.addCloneCount(0);
             }
             
             // if(theWorld.getNumberOfCreatures() <= 100) {
@@ -89,8 +89,8 @@ public class EvoSim {
             // if(i>20) {
             //     foodAmount =5;
             // }
-            
-            theWorld.addRandomFood(numberOfNewFoodSpots, foodAmount);
+            theWorld.addRandomFood(numberOfFoodSpots, foodAmount);
+            theWorld.addFoodInLeftUpperCorner(20);
             theWorld.printWorld();
 
 

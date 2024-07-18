@@ -12,8 +12,8 @@ public class Constants {
     
     int CREATURE_VISION = 1;
     int MAX_AGE = 100;
-    int INITIAL_ENERGY = 40;
-    int MAX_ENERGY = 40;
+    int INITIAL_ENERGY = 10;
+    int MAX_ENERGY = 10;
     int ENERGY_TO_REPRODUCE = 50;
     int MAX_FOOD = 20;
     int MAX_STRENGTH = 10;

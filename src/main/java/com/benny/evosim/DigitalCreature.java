@@ -183,9 +183,21 @@ public class DigitalCreature {
 
     }
 
+    public void addEnergy(int myEnergy) {
+
+        energy += myEnergy;
+
+    }
+
     public void setPosition(int[] myPosition) {
 
         position = myPosition;
+
+    }
+
+    public void setEnergy(int myEnergy) {
+
+        energy = myEnergy;
 
     }
 
@@ -474,15 +486,18 @@ public class DigitalCreature {
 
                     // Attacker stronger and wins
                     if (strength >= tmpCreature.getStrength()) {
+                        energy += tmpCreature.getEnergy();
 
                         // System.out.println("Creature killed by: " + tmpPosition[0] + "," +
                         // tmpPosition[1]);
+
 
                         return tmpCreature;
                     }
 
                     // Opponent stronger and wins
                     if (strength < tmpCreature.getStrength()) {
+                        tmpCreature.addEnergy(energy);
 
                         // System.out.println("Attacker got killed at: " + position[0] + "," +
                         // position[1]);
@@ -532,7 +547,7 @@ public class DigitalCreature {
                     // System.out.println("Mater Type:" + setType);
                     // System.out.println("Father Type:" + tmpCreature.getType());
 
-                    int setEnergy = world.constants.getInitialEnergy();
+                    int setEnergy = (energy + tmpCreature.getEnergy())/3;
                     int setVision = getVisionLength();
                     int setStrength = Math.round((getStrength() + tmpCreature.getStrength()) / 2);
                     int setGeneration = generation + 1;
@@ -554,36 +569,66 @@ public class DigitalCreature {
                         // theBaby.getActionWeights(l).print("%10.2f");
                     }
 
-                    // Checkgin world boundaries
-                    //a = x position and b = y position
-                    int bMin = -1;
-                    int bMax = 2;
-                    int aMin = -1;
-                    int aMax = 2;
+                    int[] scanPosition = { 0, 0 };
 
-                    int[] worldSize = world.getSize();
+                // Checking world boundaries
+                int startX = position[0] - actionReach;
+                int stopX = position[0] + actionReach;
 
-                    bMin = Math.max(-1, position[1] - 1);
-                    aMin = Math.max(-1, position[0] - 1);
-                    bMax = Math.min(2, worldSize[1] - position[1]);
-                    aMax = Math.min(2, worldSize[0] - position[0]);
+                int startY = position[1] - actionReach;
+                int stopY = position[1] + actionReach;
 
-                    // Adding creature, looping over nearby cells
-                    for (int b = bMin; b < bMax; b++) {
-                        newPosition[1] = position[1] + b;
-                        for (int a = aMin; a < aMax; a++) {
+                /* Scanning surrounding for food and creatures */
+                for (int b = startY; b <= stopY; b++) {
+                    for (int a = startX; a <= stopX; a++) {
 
-                            newPosition[0] = position[0] + a;
-                            System.out.println("Creature " + getId() + " trying to add " + setId + " at position " + newPosition[0] + ", " + newPosition[1]);
-                            if (world.addCreature(theBaby, newPosition)) {
-                                System.out.println("YES - WE MADE A BABY " + setId);
+                        scanPosition[0] = a;
+                        scanPosition[1] = b;
+
+                        if ((world.positionExists(scanPosition))) {
+                            // System.out.println("Creature " + getId() + " trying to add " + setId + " at position " + newPosition[0] + ", " + newPosition[1]);
+                            if (world.addCreature(theBaby, scanPosition)) {
+                                // System.out.println("YES - WE MADE A BABY " + setId);
+                                energy = energy*2/3;
+                                tmpCreature.setEnergy(tmpCreature.getEnergy()*2/3);
 
                                 return true;
 
                             }
-                        }
+                        } 
                     }
-                    System.out.println("No spot for baby");
+                }
+                    
+                    // // Checkgin world boundaries
+                    // //a = x position and b = y position
+                    // int bMin = -1;
+                    // int bMax = 2;
+                    // int aMin = -1;
+                    // int aMax = 2;
+
+                    // int[] worldSize = world.getSize();
+
+                    // bMin = Math.max(-1, position[1] - 1);
+                    // aMin = Math.max(-1, position[0] - 1);
+                    // bMax = Math.min(2, worldSize[1] - position[1]);
+                    // aMax = Math.min(2, worldSize[0] - position[0]);
+
+                    // // Adding creature, looping over nearby cells
+                    // for (int b = bMin; b < bMax; b++) {
+                    //     newPosition[1] = position[1] + b;
+                    //     for (int a = aMin; a < aMax; a++) {
+
+                    //         newPosition[0] = position[0] + a;
+                    //         System.out.println("Creature " + getId() + " trying to add " + setId + " at position " + newPosition[0] + ", " + newPosition[1]);
+                    //         if (world.addCreature(theBaby, newPosition)) {
+                    //             System.out.println("YES - WE MADE A BABY " + setId);
+
+                    //             return true;
+
+                    //         }
+                    //     }
+                    // }
+                    // System.out.println("No spot for baby");
                     return false;
 
                 } else {
