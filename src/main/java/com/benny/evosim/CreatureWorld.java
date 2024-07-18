@@ -88,6 +88,45 @@ public class CreatureWorld {
 
     }
 
+
+
+    /*
+     * Adding a random creature and setting its neural network from file
+     */
+
+    public void addCreaturesFromFile(int numberOfCreatures) {
+
+        for(int i = 0; i<numberOfCreatures; i++) {
+            addCreatureFromFile();
+        }
+    }
+
+    public void addCreatureFromFile() {
+        
+        int myId = stats.getCreatureIdCount() + 1;
+
+        int[] myPosition = getRandomLocation();
+        int setStrength = ThreadLocalRandom.current().nextInt(0, 10);
+        int setEnergy = constants.getInitialEnergy();
+        int setVision = constants.getCreatureVision();
+
+        //Creating a new random creature
+        DigitalCreature theMutantCreature = new DigitalCreature(myId, "Mutant", setEnergy, setStrength, setVision, this);
+
+        //Setting the neural network from file
+        //looping over the layers and setting each from a file with a specific namne
+        for (int i = 0; i < constants.getNumberOfLayers(); i++) {
+            // System.out.println("Setting layer " + i);
+            theMutantCreature.setActionWeightsFromFile(i);
+            theMutantCreature.setActionBiasFromFile(i);
+        }
+        
+        if (addCreature(theMutantCreature, myPosition)) {
+            // System.out.println("Mutant creature " + myId + " added at position (" + myPosition[0] + "," + myPosition[1] + ")");
+            //stats.setCreatureIdCount(myId);
+        }
+    }
+
     public void addRandomFood(int numberOfFoodSpots, int foodAmount) {
         for (int i = 0; i < numberOfFoodSpots; i++) {
 
@@ -103,6 +142,12 @@ public class CreatureWorld {
     public boolean addFoodReserve(int[] myPosition, int foodAmount) {
 
         GridContainer tmpGridContainer = theGrid.get(myPosition[0]).get(myPosition[1]);
+
+        //Checking that the foodAmount and the existing food in the spot is not more than MAX_FOOD
+        if ((tmpGridContainer.getFoodReserve() + foodAmount) > constants.getMaxFood()) {
+            //Then food amount is set so that it adds up to MAX_FOOD
+            foodAmount = constants.getMaxFood() - tmpGridContainer.getFoodReserve();
+        }
 
         if ((tmpGridContainer.isEmpty())) {
             tmpGridContainer.addFoodReserve(foodAmount);
@@ -154,6 +199,7 @@ public class CreatureWorld {
         int killedCount = 0;
         int birthCount = 0;
         int cloneCounter = 0;
+        int clonedCount = 0;
         
 
         while (iter.hasNext()) {
@@ -186,7 +232,7 @@ public class CreatureWorld {
                 }
                 case ("Clone"): {
                     if(theActionCreature.createClone(false)) {
-                        cloneCounter++;
+                        clonedCount++;
                     }
                     cloneCounter++;
                     break;
@@ -209,6 +255,8 @@ public class CreatureWorld {
         stats.addToDoNothingCount(doNothingCounter);
         stats.addToKilledCount(killedCount);
         stats.addToBirthCount(birthCount);
+        stats.addToCloneCount(cloneCounter);
+        stats.addToClonedCount(clonedCount);
 
     }
 
@@ -260,6 +308,28 @@ public class CreatureWorld {
         }
         stats.addToDiedCount(totalDied);
 
+        this.updateOldestGeneration();
+
+    }
+
+    public void updateOldestGeneration() {
+        Iterator<DigitalCreature> iter = creatureList.iterator();
+        int tmpGeneration = 0;
+        int oldestGenerationAlive = 0;
+        String theType = "";
+         DigitalCreature theCreature;
+        
+        while (iter.hasNext()) {
+            theCreature = iter.next();
+            tmpGeneration = theCreature.getGeneration();
+            theType = theCreature.getType();
+            
+            if(tmpGeneration > oldestGenerationAlive) {
+                oldestGenerationAlive = tmpGeneration;
+            }
+        }
+        
+        stats.setOldestGeneration(oldestGenerationAlive, theType);
     }
 
     public boolean addCreature(DigitalCreature myCreature, int[] myPosition) {
@@ -467,7 +537,7 @@ public class CreatureWorld {
                     gridContent = "c";
                     //Checking creature type and assigning printColor to the type
                     if (creatureType.equals("Kill")) {
-                        printColor = ANSI_RED;
+                        printColor = ANSI_YELLOW;
                     } else if (creatureType.equals("Eat")) {
                         printColor = ANSI_GREEN;
                     }
@@ -479,6 +549,9 @@ public class CreatureWorld {
                     }
                     else if (creatureType.equals("Switcher")) {
                         printColor = ANSI_CYAN;
+                    }
+                    else if (creatureType.equals("Mutant")) {
+                        printColor = ANSI_RED;
                     }
                 } 
                 

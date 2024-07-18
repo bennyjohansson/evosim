@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.equation.Equation;
 import org.ejml.simple.SimpleMatrix;
 
@@ -28,6 +29,7 @@ public class DigitalCreature {
     int outputActionSize;
     int outputMoveSize;
     int numberOfLayers;
+    int generation;
     int[] position;
     LinkedList<String> lastActions = new LinkedList<>();
     CreatureWorld world;
@@ -59,11 +61,13 @@ public class DigitalCreature {
         outputActionSize = 5;
         outputMoveSize = 8;
         numberOfLayers = 4;
+        generation = 0;
         int currentLayerSize = 0;
         int nextLayerSize = 0;
         int numberOfObjects = 4;
 
         world = myWorld;
+        numberOfLayers = world.constants.getNumberOfLayers();
 
         /*
          * Initializing neural newwork, should perhaps be own class
@@ -146,6 +150,15 @@ public class DigitalCreature {
         return type;
     }
 
+    public int getAge() {
+        // System.out.println(age);
+        return age;
+    }
+
+    public int getGeneration() {
+        return generation;
+    }
+
     public SimpleMatrix getActionWeights(int myLayer) {
 
         return actionLayerWeights.get(myLayer);
@@ -176,7 +189,13 @@ public class DigitalCreature {
 
     }
 
+    public void setGeneration(int myGeneration) {
+        generation = myGeneration;
+    }   
+
     public void setActionWeights(int myLayer, SimpleMatrix Wx) {
+
+        // System.out.println("Setting action weights: " + Wx.numCols() + "x" + Wx.numRows());
 
         actionLayerWeights.set(myLayer, Wx);
 
@@ -185,6 +204,35 @@ public class DigitalCreature {
     public void setActionBias(int myLayer, SimpleMatrix bx) {
 
         actionLayerBias.set(myLayer, bx);
+
+    }
+
+    /*
+     * Action weights from file
+     */
+    public void setActionWeightsFromFile(int myLayer) {
+        // System.out.println("Setting action weights from file");
+
+        String fileName = "/Users/bennyjohansson/Documents/Projects/evosim/evosim/src/main/java/com/benny/evosim/trained-networks/fc" + (myLayer + 1) + ".weight.csv";
+
+        SimpleMatrix Wx = Functions.readMatrixFromFile(fileName);
+
+        //Printing the Wx matrix
+        // System.out.println("Wx matrix: " + Wx);
+    
+        setActionWeights(myLayer, Wx);
+    }
+
+    public void setActionBiasFromFile(int myLayer) {
+
+        // /Users/bennyjohansson/Documents/Projects/evosim/evosim/src/main/java/com/benny/evosim/trained-networks/fc1.bias.csv
+        // evosim/src/main/java/com/benny/evosim/trained-networks/fc1.bias.csv
+
+        String fileName = "/Users/bennyjohansson/Documents/Projects/evosim/evosim/src/main/java/com/benny/evosim/trained-networks/fc" + (myLayer +1 ) + ".bias.csv";
+
+        SimpleMatrix bx = Functions.readMatrixFromFile(fileName);
+
+        setActionBias(myLayer, bx);
 
     }
 
@@ -208,7 +256,11 @@ public class DigitalCreature {
         boolean allEqual = lastActions.stream().distinct().limit(2).count() <= 1;
         String setType = getType();
 
-        if (!lastActions.isEmpty()) {
+        if(setType == "Mutant") {
+            // setType = "Mutant";
+            // System.out.println(lastActions);
+            //Do nothing
+        } else if (!lastActions.isEmpty()) {
             if (allEqual) {
                 setType = lastActions.getFirst();
             } else {
@@ -226,50 +278,39 @@ public class DigitalCreature {
      */
     public String getAction() {
 
-        double threshold = 0.3;
+        double threshold = 0.0001;
         int indexMax = 0;
         double maxValue = 0;
         String action = "";
 
         SimpleMatrix scanVector = scanActionAreaSimple(); //returns (food, creatures)
+
+        
         // System.out.println("Scan vector: " + scanVector);
         
         // SimpleMatrix W1output = new SimpleMatrix(W2.numCols(), 1);
         // SimpleMatrix W2output = new SimpleMatrix(outputSize, 1);
+
+        //{food, creatures, strength, energy, age}
 
         int MAX_FOOD = world.constants.getMaxFood();
         int MAX_CREATURES = world.constants.getMaxCreatures();
 
         //Normalizing scanvector by dividing by MAX_FOOD and MAX_CREATURES. The first item is food, the second is creatures
         // Dividing the first element with MAX_FOOD and the second with MAX_CREATURES
-        scanVector.set(0, 0, (double)scanVector.get(0, 0) / MAX_FOOD);
-        scanVector.set(1, 0, (double)scanVector.get(1, 0) / MAX_CREATURES);
+        scanVector.set(0, 0, (double)scanVector.get(0, 0) / (MAX_FOOD*9)); //Nine grids with food
+        scanVector.set(1, 0, (double)scanVector.get(1, 0) / (MAX_CREATURES*8));  //Eight grids with creatures
 
-
-        // SimpleMatrix W2outputRELU = new SimpleMatrix(outputSize,1);
         
-        // Adding the strength, energy and age to the scanVector to create the action-vector
-        //Input action vector order is: foodAvailable/MAX_FOOD, creatureAvailable/MAX_CREATURES, energy/MAX_ENERGY, strength/MAX_STRENGTH, age/MAX_AGE
-        // double strengthValue = 0.0;
-        // double energyValue = 0.0;
-        // double ageValue = 0.0;
-
-        // strengthValue = (double)strength/world.constants.getMaxStrength();
-        // energyValue = (double)energy/world.constants.getMaxEnergy();
-        // ageValue = (double)age/world.constants.getMaxAge();
-
-        // //printing strengthValue, energyValue and ageValue
-        // System.out.println("Strength value: " + strengthValue + ", " + strength + ", " + world.constants.getMaxStrength());
-        // System.out.println("Energy value: " + energyValue);
-        // System.out.println("Age value: " + ageValue);
 
         SimpleMatrix actionVector = new SimpleMatrix(scanVector.numRows() + 3, 1);
         actionVector.insertIntoThis(0, 0, scanVector);
         actionVector.set(scanVector.numRows(), 0, (double)strength/world.constants.getMaxStrength());
         actionVector.set(scanVector.numRows() + 1, 0, (double)energy/world.constants.getMaxEnergy());
         actionVector.set(scanVector.numRows() + 2, 0, (double)age/world.constants.getMaxAge());
-        //printing action vector
-        // System.out.println("Action vector: " + actionVector);
+        
+        //Appending action vector to statistics
+        world.stats.actionVectors.add(actionVector);
 
         SimpleMatrix inputVector = actionVector;
 
@@ -282,9 +323,13 @@ public class DigitalCreature {
             // System.out.println(inputVector.numCols() + "x" + inputVector.numRows());
             SimpleMatrix Wlout = Wl.mult(inputVector);
             Wlout = Wlout.plus(bl);
-            inputVector = Functions.sigmoidFunction(Wlout);
+            inputVector = Functions.reluFunction(Wlout);
 
         }
+        // if(type == "Mutant") {
+        //     System.out.println("Mutant action vector output: " + actionVector + ", " + inputVector);
+        // }
+        
 
         indexMax = Functions.findVectorIndexMax(inputVector);
         maxValue = inputVector.get(indexMax, 0);
@@ -334,7 +379,7 @@ public class DigitalCreature {
             }
             // Truncating lastactions to only store 5 last actions
             // Truncate to 5 most recent
-            while (lastActions.size() > 5) {
+            while (lastActions.size() > 10) {
                 lastActions.removeLast();
             }
             // printing the lastactions list
@@ -364,6 +409,8 @@ public class DigitalCreature {
             // System.out.println("Creature " + id + " died by age");
             return this;
         }
+
+
         return null;
 
     }
@@ -462,17 +509,19 @@ public class DigitalCreature {
         DigitalCreature tmpCreature = null;
         DigitalCreature theBaby = null;
 
-        // System.out.println("Fighting from " + position[0] + ", " + position[1]);
+        //Looping over nearby cells in a 3x3 grid
         for (int j = -1; j < 2; j++) {
+            //Setting y-position
             tmpPosition[1] = position[1] + j;
+            //Setting x-position
             for (int i = -1; i < 2; i++) {
 
                 tmpPosition[0] = position[0] + i;
 
-                // Finding opponent
+                // Finding partner
                 tmpCreature = world.getCreatureFromGrid(tmpPosition);
 
-                // If partner available, reproduce and exit
+                // If partner available, reproduce and exit with true, else try other spots
                 if (!(tmpCreature == null)) {
 
                     // Setting values from active part
@@ -480,12 +529,17 @@ public class DigitalCreature {
                     setId = world.getStatsModule().getCreatureIdCount() + 1;
 
                     String setType = getType();
-                    int setEnergy = 3;
+                    // System.out.println("Mater Type:" + setType);
+                    // System.out.println("Father Type:" + tmpCreature.getType());
+
+                    int setEnergy = world.constants.getInitialEnergy();
                     int setVision = getVisionLength();
                     int setStrength = Math.round((getStrength() + tmpCreature.getStrength()) / 2);
+                    int setGeneration = generation + 1;
 
                     // Creating the baby
                     theBaby = new DigitalCreature(setId, setType, setEnergy, setStrength, setVision, world);
+                    theBaby.setGeneration(setGeneration);  
 
                     // Setting Neural nets values from mum and dad
                     for (int l = 0; l < numberOfLayers; l++) {
@@ -501,6 +555,7 @@ public class DigitalCreature {
                     }
 
                     // Checkgin world boundaries
+                    //a = x position and b = y position
                     int bMin = -1;
                     int bMax = 2;
                     int aMin = -1;
@@ -519,20 +574,20 @@ public class DigitalCreature {
                         for (int a = aMin; a < aMax; a++) {
 
                             newPosition[0] = position[0] + a;
-                            // System.out.println("Creature " + getId() + " trying to add " + setId + " at
-                            // position " + newPosition[0] + ", " + newPosition[1]);
+                            System.out.println("Creature " + getId() + " trying to add " + setId + " at position " + newPosition[0] + ", " + newPosition[1]);
                             if (world.addCreature(theBaby, newPosition)) {
-                                // System.out.println("YES - WE MADE A BABY " + setId);
+                                System.out.println("YES - WE MADE A BABY " + setId);
 
                                 return true;
 
                             }
                         }
                     }
+                    System.out.println("No spot for baby");
                     return false;
 
                 } else {
-                    return false;
+                    //Looking for a new spot
                     // System.out.println("No creature here");
                 }
 
@@ -552,10 +607,10 @@ public class DigitalCreature {
         setId = world.getStatsModule().getCreatureIdCount() + 1;
         String setType = getType();
 
-        int setEnergy = getEnergy() / 2;
+        int setEnergy = Math.min(getEnergy() / 2, 0);
         if (rescueCycle) {
             setEnergy = world.constants.getInitialEnergy();
-        }
+        } 
 
         int setVision = getVisionLength();
         int setStrength = strength;
@@ -563,6 +618,10 @@ public class DigitalCreature {
 
         // Creating the baby
         theClone = new DigitalCreature(setId, setType, setEnergy, setStrength, setVision, world);
+
+        if(!rescueCycle) {
+            theClone.setGeneration(generation + 1);
+        } 
 
         // Setting W1 and W2, b1 and b2
         for (int i = 0; i < numberOfLayers; i++) {
@@ -587,7 +646,7 @@ public class DigitalCreature {
                 if (world.addCreature(theClone, newPosition)) {
                     // System.out.println("YES - WE MADE a clone " + setId);
                     if (!rescueCycle) {
-                        energy /= 2;
+                        Math.min(energy /= 2,0);
                     }
                     // energy /= 2 ;
                     return true;
@@ -619,7 +678,7 @@ public class DigitalCreature {
             // System.out.println(inputVector.numCols() + "x"+ inputVector.numRows());
             SimpleMatrix Wlout = Wl.mult(inputVector);
             Wlout = Wlout.plus(bl);
-            inputVector = Functions.sigmoidFunction(Wlout);
+            inputVector = Functions.reluFunction(Wlout);
             // System.out.println(inputVector.numCols() + "x"+ inputVector.numRows());
 
         }
