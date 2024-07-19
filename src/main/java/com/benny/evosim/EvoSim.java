@@ -60,7 +60,7 @@ public class EvoSim {
         /* Initiating eat-and-move process */
         theWorld.printWorld();
         System.out.println("Creatures before: " + theWorld.getNumberOfCreatures());
-        for (int i = 0; i<50000; i++) {
+        for (int i = 0; i<20000; i++) {
             
             System.out.println("-------------------------------");
             System.out.println("YEAR " + i);
