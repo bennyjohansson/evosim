@@ -34,10 +34,10 @@ public class EvoSim {
         *Setting initiatl parameters
         */
         int[] worldSize = {60, 60};
-        int numberOfCreatures = 100;
-        int numberOfFoodSpots = worldSize[0] * worldSize[1] / 10;
-        int numberOfNewFoodSpots = worldSize[0] * worldSize[1] / 10;
-        int foodAmount = 5;
+        int numberOfCreatures = 500;
+        int numberOfFoodSpots = worldSize[0] * worldSize[1] / 30;
+        int numberOfNewFoodSpots = worldSize[0] * worldSize[1] / 30;
+        int foodAmount = 3;
         
         
         /* Create new World */
@@ -45,7 +45,7 @@ public class EvoSim {
         System.out.println("New world created with size " + worldSize[0] + "x" + worldSize[1]);
 
         /* Adding creatures to the world */
-        theWorld.addRandomCreatures(1000);
+        theWorld.addRandomCreatures(numberOfCreatures);
         theWorld.addCreaturesFromFile(numberOfCreatures);
 
         /*Adding food to the world */
